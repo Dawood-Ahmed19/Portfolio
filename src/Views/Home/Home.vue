@@ -6,7 +6,7 @@ import MainImg from "../../assets/mainimg.png";
 <template>
   <!-- Hero Section -->
   <section class="container w-[calc(100% - 2rem)] m-auto">
-    <div class="flex flex-row items-center justify-between">
+    <div class="flex flex-row items-center justify-center xl:justify-between">
       <span class="flex flex-col gap-4">
         <h1 class="text-5xl font-semibold text-white">
           Dawood is A <span class="text-mainPink">Full Stack Developer</span>
@@ -17,9 +17,9 @@ import MainImg from "../../assets/mainimg.png";
         <Button>Contact me</Button>
       </span>
       <span
-        class="relative inline-block before:content-[url('./assets/Dots.png')] before:absolute before:top-[7rem] before:left-[18rem] before:rotate-12"
+        class="relative xl:inline-block hidden before:content-[url('./assets/Dots.png')] before:absolute before:top-[7rem] before:left-[18rem] before:rotate-12"
       >
-        <img class="max-w-2xl" :src="MainImg" alt="body img" />
+        <img class="max-w-2xl w-full h-auto" :src="MainImg" alt="body img" />
       </span>
     </div>
   </section>
