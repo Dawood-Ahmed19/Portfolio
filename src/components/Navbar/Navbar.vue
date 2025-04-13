@@ -36,7 +36,7 @@ const links: NavItems[] = [
       <img class="h-8 inline-block align-middle" :src="Logo" alt="logo-img" />
       <span class="inline-block align-middle ml-2">Dawood Ahmed</span>
     </span>
-    <ul type="none" class="flex flex-row gap-4">
+    <ul type="none" class="hidden flex-row gap-4 md:flex">
       <li v-for="link in links" :key="link.path">
         <RouterLink
           :to="link.path"

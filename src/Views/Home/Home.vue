@@ -1,25 +1,26 @@
 <script setup>
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { faLinkedin, faGithub } from "@fortawesome/free-brands-svg-icons";
-
-const icons = [
-  {
-    icon: faLinkedin,
-    path: "https://www.linkedin.com/in/dawood-ahmed-911742275/",
-  },
-  {
-    icon: faGithub,
-    path: "https://github.com/Dawood-Ahmed19",
-  },
-];
+import Button from "../../components/Button/Button.vue";
+import MainImg from "../../assets/mainimg.png";
 </script>
 
 <template>
-  <span class="absolute">
-    <li v-for="icon in icons" :key="icon.icon">
-      <a target="_blank" :href="icon.path">
-        <FontAwesomeIcon :icon="icon.icon" />
-      </a>
-    </li>
-  </span>
+  <!-- Hero Section -->
+  <section class="container w-[calc(100% - 2rem)] m-auto">
+    <div class="flex flex-row items-center justify-between">
+      <span class="flex flex-col gap-4">
+        <h1 class="text-5xl font-semibold text-white">
+          Dawood is A <span class="text-mainPink">Full Stack Developer</span>
+        </h1>
+        <p class="text-gray-400 text-lg tracking-widest">
+          He engineers sleek, responsive websites with a creative touch
+        </p>
+        <Button>Contact me</Button>
+      </span>
+      <span
+        class="relative inline-block before:content-[url('./assets/Dots.png')] before:absolute before:top-[7rem] before:left-[18rem] before:rotate-12"
+      >
+        <img class="max-w-2xl" :src="MainImg" alt="body img" />
+      </span>
+    </div>
+  </section>
 </template>
