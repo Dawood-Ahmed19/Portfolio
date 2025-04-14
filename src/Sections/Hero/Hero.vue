@@ -4,7 +4,7 @@ import Button from "../../components/Button/Button.vue";
 </script>
 
 <template>
-  <section class="container w-[calc(100% - 2rem)] m-auto">
+  <section class="container w-[calc(100% - 2rem)] m-auto py-10">
     <div class="flex flex-row items-center justify-center xl:justify-between">
       <span class="flex flex-col gap-4">
         <h1 class="text-5xl font-semibold text-white">
