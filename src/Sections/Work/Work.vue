@@ -40,7 +40,7 @@ const Projects: Project[] = [
         /></RouterLink>
       </span>
 
-      <span>
+      <span class="w-full flex flex-wrap gap-6 items-center justify-between">
         <ProjectCard
           v-for="(project, index) in Projects"
           :key="index"

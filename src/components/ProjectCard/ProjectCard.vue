@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import Button from "../Button/Button.vue";
-
 defineProps<{
   thumbnail: string;
   title: string;
@@ -30,7 +28,12 @@ defineProps<{
     <span
       class="flex justify-between items-center px-4 py-3 border-t border-gray-600 text-sm"
     >
-      <Button>Code</Button>
+      <a
+        class="border border-mainPink px-6 py-3 hover:bg-mainPink"
+        :href="link"
+        target="_blank"
+        >Live</a
+      >
     </span>
   </div>
 </template>
