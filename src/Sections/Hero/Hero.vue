@@ -4,7 +4,7 @@ import Button from "../../components/Button/Button.vue";
 </script>
 
 <template>
-  <section class="container w-[calc(100% - 2rem)] m-auto">
+  <section class="container w-[calc(100% - 2rem)] m-auto py-10">
     <div class="flex flex-row items-center justify-center xl:justify-between">
       <span class="flex flex-col gap-4">
         <h1 class="text-5xl font-semibold text-white">
@@ -13,7 +13,7 @@ import Button from "../../components/Button/Button.vue";
         <p class="text-gray-400 text-lg tracking-widest">
           He engineers sleek, responsive websites with a creative touch
         </p>
-        <Button>Contact me!!</Button>
+        <Button to="/contact">Contact me!!</Button>
       </span>
       <span
         class="relative xl:inline-block hidden before:content-[url('./assets/Dots.png')] before:absolute before:top-[7rem] before:left-[18rem] before:rotate-12"
