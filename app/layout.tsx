@@ -1,10 +1,17 @@
-import { JetBrains_Mono } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 
-const jetBrainsMono = JetBrains_Mono({
+const archivo = Archivo({
   subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
+  weight: ["600", "800", "900"],
+  variable: "--font-archivo",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains",
 });
 
 export default function RootLayout({
@@ -14,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`bg-bg ${jetBrainsMono.className}`}>
+      <body
+        className={`bg-ink text-white antialiased ${archivo.variable} ${mono.variable}`}
+      >
         <div className="container mx-auto">
           <Navbar />
           <main>{children}</main>
