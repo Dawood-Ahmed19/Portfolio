@@ -29,34 +29,36 @@ const Navbar = () => {
     { scope: container },
   );
 
-  const scrambleText = contextSafe((element, text) => {
-    const obj = { progress: 0 };
+  const scrambleText = contextSafe(
+    (element: HTMLAnchorElement, text: string) => {
+      const obj = { progress: 0 };
 
-    gsap.killTweensOf(obj);
+      gsap.killTweensOf(obj);
 
-    gsap.to(obj, {
-      progress: 1,
-      duration: 0.5,
-      ease: "none",
+      gsap.to(obj, {
+        progress: 1,
+        duration: 0.5,
+        ease: "none",
 
-      onUpdate: () => {
-        const revealed = Math.floor(obj.progress * text.length);
+        onUpdate: () => {
+          const revealed = Math.floor(obj.progress * text.length);
 
-        element.textContent = text
-          .split("")
-          .map((char, index) => {
-            if (index < revealed || char === " ") return char;
+          element.textContent = text
+            .split("")
+            .map((char, index) => {
+              if (index < revealed || char === " ") return char;
 
-            return CHARS[Math.floor(Math.random() * CHARS.length)];
-          })
-          .join("");
-      },
+              return CHARS[Math.floor(Math.random() * CHARS.length)];
+            })
+            .join("");
+        },
 
-      onComplete: () => {
-        element.textContent = text;
-      },
-    });
-  });
+        onComplete: () => {
+          element.textContent = text;
+        },
+      });
+    },
+  );
 
   return (
     <div
