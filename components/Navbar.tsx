@@ -21,6 +21,21 @@ const Navbar = () => {
   const menuTl = useRef<gsap.core.Timeline | null>(null);
   const tweens = useRef(new WeakMap<HTMLElement, gsap.core.Tween>());
   const [open, setOpen] = useState(false);
+  const [light, setLight] = useState(false);
+
+  useEffect(() => {
+    const onPanel = (e: Event) => {
+      const d = (e as CustomEvent).detail;
+      const id = typeof d === "string" ? d : d?.id;
+      setLight(id === "stack");
+    };
+    window.addEventListener("panel-enter", onPanel);
+    window.addEventListener("goto-section", onPanel);
+    return () => {
+      window.removeEventListener("panel-enter", onPanel);
+      window.removeEventListener("goto-section", onPanel);
+    };
+  }, []);
 
   const goTo = (id: string) =>
     window.dispatchEvent(new CustomEvent("goto-section", { detail: id }));
@@ -95,6 +110,7 @@ const Navbar = () => {
     },
     { scope: container },
   );
+
   const setMenu = contextSafe((next: boolean) => {
     setOpen(next);
     document.body.style.overflow = next ? "hidden" : "";
@@ -145,18 +161,22 @@ const Navbar = () => {
   };
 
   return (
-    <div ref={container} className="fixed inset-x-0 top-0 z-40 w-full">
+    <div
+      ref={container}
+      data-light={light && !open}
+      className="group fixed inset-x-0 top-0 z-40 w-full"
+    >
       <div
         data-nav-bg
         aria-hidden="true"
-        className="invisible absolute inset-0 -z-20 border-b border-white/10 bg-[#0a0a0a]/80 opacity-0 backdrop-blur-md"
+        className="invisible absolute inset-0 -z-20 border-b border-white/10 bg-[#0a0a0a]/80 opacity-0 backdrop-blur-md transition-colors duration-300 group-data-[light=true]:border-ink/10 group-data-[light=true]:bg-lime/80"
       />
       <div
         data-nav-inner
         className="container mx-auto flex items-center justify-between px-6 py-6 md:py-12"
       >
         {/* logo */}
-        <h1 className="text-sm font-medium uppercase text-paper">
+        <h1 className="text-sm font-medium uppercase text-paper transition-colors duration-300 group-data-[light=true]:text-ink">
           Dawood Ahmed / DEV
         </h1>
 
@@ -166,7 +186,7 @@ const Navbar = () => {
             <li key={id}>
               <a
                 href={`#${id}`}
-                className="text-sm text-paper no-underline hover:cursor-pointer hover:text-lime"
+                className="text-sm text-paper no-underline transition-colors duration-300 hover:cursor-pointer hover:text-lime group-data-[light=true]:text-ink group-data-[light=true]:hover:text-ink/60"
                 onClick={(e) => handleNav(e, id)}
                 onMouseEnter={(e) => scrambleText(e.currentTarget, label)}
               >
@@ -177,8 +197,8 @@ const Navbar = () => {
         </ul>
 
         {/* desktop status */}
-        <div className="hidden items-center gap-2 text-sm text-paper md:flex">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-lime" />
+        <div className="hidden items-center gap-2 text-sm text-paper transition-colors duration-300 group-data-[light=true]:text-ink md:flex">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-lime group-data-[light=true]:bg-ink" />
           <span className="animate-pulse">Available For Work</span>
         </div>
 
@@ -190,10 +210,17 @@ const Navbar = () => {
           onClick={() => setMenu(!open)}
           className="flex h-10 w-10 flex-col items-center justify-center gap-[6px] md:hidden"
         >
-          <span data-bar-top className="block h-[2px] w-6 bg-paper" />
-          <span data-bar-bottom className="block h-[2px] w-6 bg-paper" />
+          <span
+            data-bar-top
+            className="block h-[2px] w-6 bg-paper transition-colors duration-300 group-data-[light=true]:bg-ink"
+          />
+          <span
+            data-bar-bottom
+            className="block h-[2px] w-6 bg-paper transition-colors duration-300 group-data-[light=true]:bg-ink"
+          />
         </button>
       </div>
+
       {/* Mobile Menu */}
       <div
         data-menu

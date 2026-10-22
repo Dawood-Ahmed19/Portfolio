@@ -90,8 +90,8 @@ const AboutSection = () => {
   );
 
   return (
-    <section ref={root} id="about" className="">
-      <div className="container mx-auto relative flex h-full w-full flex-col justify-center gap-4 px-6 pb-6 md:gap-10 md:py-32 md:pr-16 md:pl-24">
+    <section ref={root} id="about" className="py-30 md:py-32">
+      <div className="container mx-auto relative flex h-full w-full flex-col justify-center gap-4 px-6 pb-6 md:gap-10 md:pr-16 md:pl-24">
         <div data-fade>
           <p
             data-label

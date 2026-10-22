@@ -104,8 +104,8 @@ const HeroSection = ({ start = true }: Props) => {
   );
 
   return (
-    <section ref={container} className="">
-      <div className="container mx-auto flex h-full w-full flex-col justify-center gap-6 px-6 pb-10 md:gap-10 md:px-0 md:py-32">
+    <section ref={container} className="py-30 md:py-32">
+      <div className="container mx-auto flex h-full w-full flex-col justify-center gap-6 px-6 pb-10 md:gap-10 md:px-0">
         <p className="text-mute text-xs leading-relaxed font-normal tracking-wide uppercase md:text-sm">
           // Full stack Developer - Based in rawalpindi / islamabad
         </p>

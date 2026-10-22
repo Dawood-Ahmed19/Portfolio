@@ -33,7 +33,6 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
       const zooms = panels.map((p) =>
         p.querySelector<HTMLElement>("[data-zoom-target]"),
       );
-      // a panel right after a zoom is opened by the zoom, not wiped in
       const afterZoom = panels.map((_, i) => i > 0 && !!zooms[i - 1]);
 
       panels.forEach((p, i) => {
@@ -63,6 +62,13 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
       );
       if (total === 0) return;
 
+      // timeline time at which each panel becomes the "active" one
+      const enters: number[] = [0];
+      let activeId: string | undefined = idOf(panels[0]) ?? "panel-0";
+
+      const dispatch = (id: string) =>
+        window.dispatchEvent(new CustomEvent("panel-enter", { detail: id }));
+
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -73,6 +79,20 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
           scrub: 0.5,
           anticipatePin: 1,
           invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            const time = self.progress * total;
+            let active = 0;
+            for (let i = 1; i < enters.length; i++) {
+              if (enters[i] !== undefined && time > enters[i] + 0.001) {
+                active = i;
+              }
+            }
+            const id = idOf(panels[active]) ?? `panel-${active}`;
+            if (id !== activeId) {
+              activeId = id;
+              dispatch(id);
+            }
+          },
           snap: {
             snapTo: 1 / total,
             directional: true,
@@ -87,17 +107,8 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
       let t = 0;
 
       panels.forEach((panel, p) => {
-        // ---- wipe this panel in (skipped when a zoom opens it) ----
         if (p > 0 && !afterZoom[p]) {
-          const id = idOf(panel);
-          tl.call(
-            () =>
-              window.dispatchEvent(
-                new CustomEvent("panel-enter", { detail: id }),
-              ),
-            undefined,
-            t,
-          );
+          enters[p] = t;
           tl.to(
             panel,
             { clipPath: SHOWN, duration: 1, ease: "power2.inOut" },
@@ -154,6 +165,7 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
             t,
           );
           tl.set(panels.slice(0, p), { autoAlpha: 0 }, t);
+          tl.set(panels.slice(0, p + 1), { pointerEvents: "none" }, t + 0.6);
           const ancestors: HTMLElement[] = [];
           for (
             let el: HTMLElement | null = last;
@@ -194,7 +206,7 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
 
           // Stack opens from the centre of the W
           if (next) {
-            const id = idOf(next);
+            enters[p + 1] = t + 0.6;
             tl.fromTo(
               next,
               { clipPath: () => `circle(0% at ${spot().x}% ${spot().y}%)` },
@@ -204,14 +216,6 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
                 ease: "power2.in",
               },
               t + 0.2,
-            );
-            tl.call(
-              () =>
-                window.dispatchEvent(
-                  new CustomEvent("panel-enter", { detail: id }),
-                ),
-              undefined,
-              t + 0.6,
             );
           }
 
