@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import Button from "./Button";
 
 gsap.registerPlugin(useGSAP, DrawSVGPlugin);
 
@@ -50,13 +51,62 @@ const HeroSection = ({ start = true }: Props) => {
         );
       }
     },
+
     { scope: container, dependencies: [start] },
   );
 
+  useGSAP(
+    (_ctx, contextSafe) => {
+      const outline =
+        container.current?.querySelector<HTMLElement>("[data-outline]");
+      const fill = container.current?.querySelector<HTMLElement>("[data-fill]");
+      if (!outline || !fill || !contextSafe) return;
+
+      gsap.set(fill, { clipPath: "circle(0% at 0% 100%)" });
+
+      const corner = (e: MouseEvent) => {
+        const r = outline.getBoundingClientRect();
+        const x = e.clientX < r.left + r.width / 2 ? 0 : 100;
+        const y = e.clientY < r.top + r.height / 2 ? 0 : 100;
+        return { x, y };
+      };
+
+      const onEnter = contextSafe((e: MouseEvent) => {
+        const { x, y } = corner(e);
+        gsap.set(fill, { clipPath: `circle(0% at ${x}% ${y}%)` });
+        gsap.to(fill, {
+          clipPath: `circle(150% at ${x}% ${y}%)`,
+          duration: 0.7,
+          ease: "power3.out",
+          overwrite: true,
+        });
+      });
+
+      const onLeave = contextSafe((e: MouseEvent) => {
+        const { x, y } = corner(e);
+        gsap.to(fill, {
+          clipPath: `circle(0% at ${x}% ${y}%)`,
+          duration: 0.5,
+          ease: "power3.inOut",
+          overwrite: true,
+        });
+      });
+
+      outline.addEventListener("mouseenter", onEnter);
+      outline.addEventListener("mouseleave", onLeave);
+
+      return () => {
+        outline.removeEventListener("mouseenter", onEnter);
+        outline.removeEventListener("mouseleave", onLeave);
+      };
+    },
+    { scope: container },
+  );
+
   return (
-    <div ref={container} className="flex w-full flex-col gap-10 py-18">
+    <section ref={container} className="flex w-full flex-col gap-10 py-32">
       <p className="text-mute text-sm font-normal uppercase">
-        // Full stack Developer - Based in rawalpindi
+        // Full stack Developer - Based in rawalpindi / islamabad
       </p>
 
       <h1 className="text-[clamp(56px,10.5vw,152px)] font-display text-paper leading-35 font-extrabold tracking-tight uppercase">
@@ -69,9 +119,17 @@ const HeroSection = ({ start = true }: Props) => {
         <div className="overflow-hidden">
           <span
             data-reveal-line
-            className="block text-transparent [-webkit-text-stroke:2px_var(--color-lime)]"
+            data-outline
+            className="relative inline-block cursor-default whitespace-nowrap text-transparent [-webkit-text-stroke:2px_var(--color-lime)]"
           >
             The web
+            <span
+              data-fill
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 whitespace-nowrap text-[var(--color-lime)] [-webkit-text-stroke:2px_var(--color-lime)]"
+            >
+              The web
+            </span>
           </span>
         </div>
 
@@ -80,7 +138,6 @@ const HeroSection = ({ start = true }: Props) => {
             End to End.
           </span>
         </div>
-
         <svg
           className="mt-2 w-[85%]"
           viewBox="0 0 800 12"
@@ -97,7 +154,15 @@ const HeroSection = ({ start = true }: Props) => {
           />
         </svg>
       </h1>
-    </div>
+      <div className="flex items-center justify-between">
+        <p className="text-md text-mute">
+          I build full stack web apps, from database to interface, with the PERN
+          and MERN stacks.
+        </p>
+
+        <Button>View Selected Work →</Button>
+      </div>
+    </section>
   );
 };
 

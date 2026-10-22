@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { CustomEase } from "gsap/CustomEase";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(useGSAP, CustomEase);
+gsap.registerPlugin(useGSAP, CustomEase, ScrollTrigger);
 CustomEase.create("curtain", "0.76, 0, 0.24, 1");
 
 const COLUMNS = 5;
@@ -16,10 +17,15 @@ type Props = {
 };
 
 export default function initialLoader({ onReveal, onComplete }: Props) {
+  const [year, setYear] = useState<number | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const digitsRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const [unmounted, setUnmounted] = useState(false);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   useGSAP(
     () => {
@@ -32,8 +38,22 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
       });
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.set("body", { overflow: "hidden" });
+        const html = document.documentElement;
+        const body = document.body;
 
+        const lock = () => {
+          html.style.overflow = "hidden";
+          body.style.overflow = "hidden";
+        };
+        const unlock = () => {
+          html.style.overflow = "";
+          body.style.overflow = "";
+        };
+        gsap.set("body", { overflow: "hidden" });
+        if ("scrollRestoration" in history)
+          history.scrollRestoration = "manual";
+        window.scrollTo(0, 0);
+        lock();
         const counter = { v: 0 };
 
         const paint = () => {
@@ -49,7 +69,8 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
 
         const tl = gsap.timeline({
           onComplete: () => {
-            gsap.set("body", { overflow: "" });
+            unlock();
+            ScrollTrigger.refresh();
             onComplete?.();
             setUnmounted(true);
           },
@@ -166,7 +187,7 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
               <span className="ldr-meta block">Full Stack Developer</span>
             </span>
             <span className="overflow-hidden">
-              <span className="ldr-meta block">Portfolio 2026</span>
+              <span className="ldr-meta block">Portfolio {year}</span>
             </span>
           </div>
         </div>

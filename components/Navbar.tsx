@@ -15,6 +15,8 @@ const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
 
 const Navbar = () => {
   const container = useRef(null);
+  const goTo = (id: string) =>
+    window.dispatchEvent(new CustomEvent("goto-section", { detail: id }));
 
   const { contextSafe } = useGSAP({ scope: container });
   useGSAP(
@@ -61,35 +63,39 @@ const Navbar = () => {
   );
 
   return (
-    <div
-      ref={container}
-      className="flex items-center justify-between h-[20px] py-12"
-    >
-      <div>
-        <h1 className="uppercase text-paper font-medium text-sm">
-          Dawood Ahmed / DEV
-        </h1>
-      </div>
-      <div>
-        <ul className="flex items-center gap-8">
-          {NavLinks.map(({ label, id }) => {
-            return (
-              <li key={id}>
-                <a
-                  className="decoration-none text-paper text-sm hover:text-lime"
-                  href={`#${id}`}
-                  onMouseEnter={(e) => scrambleText(e.currentTarget, label)}
-                >
-                  {label}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-      <div className="flex items-center gap-2 text-sm text-paper">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-lime" />
-        <span className="animate-pulse">Available For Work</span>
+    <div ref={container} className="fixed inset-x-0 top-0 z-40 w-full">
+      <div className="container mx-auto flex items-center justify-between py-12">
+        <div>
+          <h1 className="uppercase text-paper font-medium text-sm">
+            Dawood Ahmed / DEV
+          </h1>
+        </div>
+
+        <div>
+          <ul className="flex items-center gap-8">
+            {NavLinks.map(({ label, id }) => {
+              return (
+                <li key={id}>
+                  <a
+                    className="no-underline text-paper text-sm hover:text-lime hover:cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      goTo(id);
+                    }}
+                    onMouseEnter={(e) => scrambleText(e.currentTarget, label)}
+                  >
+                    {label}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm text-paper">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-lime" />
+          <span className="animate-pulse">Available For Work</span>
+        </div>
       </div>
     </div>
   );
