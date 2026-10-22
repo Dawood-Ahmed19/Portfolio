@@ -1,8 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const NavLinks = [
   { label: "About", id: "about" },
@@ -14,87 +17,209 @@ const NavLinks = [
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
 
 const Navbar = () => {
-  const container = useRef(null);
+  const container = useRef<HTMLDivElement>(null);
+  const menuTl = useRef<gsap.core.Timeline | null>(null);
+  const tweens = useRef(new WeakMap<HTMLElement, gsap.core.Tween>());
+  const [open, setOpen] = useState(false);
+
   const goTo = (id: string) =>
     window.dispatchEvent(new CustomEvent("goto-section", { detail: id }));
 
-  const { contextSafe } = useGSAP({ scope: container });
-  useGSAP(
+  const { contextSafe } = useGSAP(
     () => {
+      // ---- intro ----
       gsap.from(container.current, {
         opacity: 0,
         y: -15,
         duration: 1,
         ease: "power2.out",
       });
+
+      // ---- mobile menu timeline ----
+      gsap.set("[data-menu]", {
+        autoAlpha: 0,
+        clipPath: "inset(0% 0% 100% 0%)",
+      });
+      gsap.set("[data-menu-link]", { yPercent: 110 });
+
+      menuTl.current = gsap
+        .timeline({
+          paused: true,
+          defaults: { ease: "power3.inOut" },
+          onReverseComplete: () => {
+            gsap.set("[data-menu]", { autoAlpha: 0 });
+          },
+        })
+        .set("[data-menu]", { autoAlpha: 1 })
+        .to("[data-menu]", { clipPath: "inset(0% 0% 0% 0%)", duration: 0.7 })
+        .to(
+          "[data-menu-link]",
+          { yPercent: 0, duration: 0.7, stagger: 0.07, ease: "power4.out" },
+          0.25,
+        )
+        .to("[data-bar-top]", { y: 4, rotate: 45, duration: 0.4 }, 0)
+        .to("[data-bar-bottom]", { y: -4, rotate: -45, duration: 0.4 }, 0);
+
+      const mm = gsap.matchMedia();
+
+      mm.add(
+        { desktop: "(min-width: 768px)", mobile: "(max-width: 767px)" },
+        (ctx) => {
+          const { desktop } = ctx.conditions as { desktop: boolean };
+
+          const compact = gsap
+            .timeline({
+              paused: true,
+              defaults: { duration: 0.35, ease: "power2.out" },
+            })
+            .to("[data-nav-bg]", { autoAlpha: 1 }, 0)
+            .to(
+              "[data-nav-inner]",
+              {
+                paddingTop: desktop ? 20 : 12,
+                paddingBottom: desktop ? 20 : 12,
+              },
+              0,
+            );
+
+          ScrollTrigger.create({
+            start: 40,
+            end: "max",
+            onToggle: (self) =>
+              self.isActive ? compact.play() : compact.reverse(),
+          });
+        },
+      );
+
+      return () => mm.revert();
     },
     { scope: container },
   );
+  const setMenu = contextSafe((next: boolean) => {
+    setOpen(next);
+    document.body.style.overflow = next ? "hidden" : "";
+    if (next) menuTl.current?.timeScale(1).play();
+    else menuTl.current?.timeScale(1.4).reverse();
+  });
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 768 && open) setMenu(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open, setMenu]);
 
   const scrambleText = contextSafe(
     (element: HTMLAnchorElement, text: string) => {
+      tweens.current.get(element)?.kill();
       const obj = { progress: 0 };
 
-      gsap.killTweensOf(obj);
-
-      gsap.to(obj, {
+      const tween = gsap.to(obj, {
         progress: 1,
         duration: 0.5,
         ease: "none",
-
         onUpdate: () => {
           const revealed = Math.floor(obj.progress * text.length);
-
           element.textContent = text
             .split("")
-            .map((char, index) => {
-              if (index < revealed || char === " ") return char;
-
-              return CHARS[Math.floor(Math.random() * CHARS.length)];
-            })
+            .map((char, i) =>
+              i < revealed || char === " "
+                ? char
+                : CHARS[Math.floor(Math.random() * CHARS.length)],
+            )
             .join("");
         },
-
         onComplete: () => {
           element.textContent = text;
         },
       });
+      tweens.current.set(element, tween);
     },
   );
 
+  const handleNav = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    if (open) setMenu(false);
+    goTo(id);
+  };
+
   return (
     <div ref={container} className="fixed inset-x-0 top-0 z-40 w-full">
-      <div className="container mx-auto flex items-center justify-between py-12">
-        <div>
-          <h1 className="uppercase text-paper font-medium text-sm">
-            Dawood Ahmed / DEV
-          </h1>
-        </div>
+      <div
+        data-nav-bg
+        aria-hidden="true"
+        className="invisible absolute inset-0 -z-20 border-b border-white/10 bg-[#0a0a0a]/80 opacity-0 backdrop-blur-md"
+      />
+      <div
+        data-nav-inner
+        className="container mx-auto flex items-center justify-between px-6 py-6 md:py-12"
+      >
+        {/* logo */}
+        <h1 className="text-sm font-medium uppercase text-paper">
+          Dawood Ahmed / DEV
+        </h1>
 
-        <div>
-          <ul className="flex items-center gap-8">
-            {NavLinks.map(({ label, id }) => {
-              return (
-                <li key={id}>
-                  <a
-                    className="no-underline text-paper text-sm hover:text-lime hover:cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      goTo(id);
-                    }}
-                    onMouseEnter={(e) => scrambleText(e.currentTarget, label)}
-                  >
-                    {label}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        {/* desktop links */}
+        <ul className="hidden items-center gap-8 md:flex">
+          {NavLinks.map(({ label, id }) => (
+            <li key={id}>
+              <a
+                href={`#${id}`}
+                className="text-sm text-paper no-underline hover:cursor-pointer hover:text-lime"
+                onClick={(e) => handleNav(e, id)}
+                onMouseEnter={(e) => scrambleText(e.currentTarget, label)}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
 
-        <div className="flex items-center gap-2 text-sm text-paper">
+        {/* desktop status */}
+        <div className="hidden items-center gap-2 text-sm text-paper md:flex">
           <span className="h-2 w-2 animate-pulse rounded-full bg-lime" />
           <span className="animate-pulse">Available For Work</span>
+        </div>
+
+        {/* mobile toggle */}
+        <button
+          type="button"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          onClick={() => setMenu(!open)}
+          className="flex h-10 w-10 flex-col items-center justify-center gap-[6px] md:hidden"
+        >
+          <span data-bar-top className="block h-[2px] w-6 bg-paper" />
+          <span data-bar-bottom className="block h-[2px] w-6 bg-paper" />
+        </button>
+      </div>
+      {/* Mobile Menu */}
+      <div
+        data-menu
+        className="absolute inset-x-0 top-0 -z-10 flex h-screen flex-col justify-center bg-[#0a0a0a] px-6 md:hidden"
+      >
+        <ul className="flex flex-col gap-4">
+          {NavLinks.map(({ label, id }, i) => (
+            <li key={id} className="overflow-hidden">
+              <a
+                data-menu-link
+                href={`#${id}`}
+                onClick={(e) => handleNav(e, id)}
+                className="block font-display text-[clamp(40px,14vw,72px)] font-black uppercase leading-none text-paper no-underline active:text-lime"
+              >
+                <span className="mr-3 font-mono text-xs text-lime">
+                  0{i + 1}
+                </span>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-12 flex items-center gap-2 text-sm text-paper">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-lime" />
+          <span>Available For Work</span>
         </div>
       </div>
     </div>

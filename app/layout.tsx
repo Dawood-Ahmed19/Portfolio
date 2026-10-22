@@ -24,7 +24,7 @@ export default function RootLayout({
       <body
         className={`bg-ink text-white antialiased ${archivo.variable} ${mono.variable}`}
       >
-        <div className="container mx-auto">
+        <div>
           <Navbar />
           <main>{children}</main>
         </div>

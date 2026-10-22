@@ -18,6 +18,13 @@ const HEADLINE = [
   { text: "Between.", active: false },
 ];
 
+const Dot = ({ zoom = false }: { zoom?: boolean }) => (
+  <span
+    {...(zoom ? { "data-zoom-target": "" } : {})}
+    className="relative z-50 ml-[0.05em] inline-block h-[0.17em] w-[0.17em] rounded-full bg-[var(--color-lime)] align-baseline"
+  />
+);
+
 const AboutSection = () => {
   const root = useRef<HTMLElement>(null);
 
@@ -83,113 +90,132 @@ const AboutSection = () => {
   );
 
   return (
-    <section
-      ref={root}
-      id="about"
-      className="relative flex h-full w-full flex-col justify-center gap-10 overflow-hidden pr-6 pl-16 md:pr-16 md:pl-24"
-    >
-      <p
-        data-label
-        className="font-mono text-[11px] tracking-[0.25em] text-mute uppercase"
-      >
-        01 / About
-      </p>
-
-      <div className="grid items-start gap-10 md:grid-cols-[minmax(260px,320px)_1fr] md:gap-16">
-        {/* ---------- LEFT: model card ---------- */}
-        <div className="relative p-3">
-          {/* corner brackets */}
-          <span
-            data-bracket
-            className="absolute top-0 left-0 h-7 w-7 border-t-2 border-l-2 border-[var(--color-lime)]"
-          />
-          <span
-            data-bracket
-            className="absolute top-0 right-0 h-7 w-7 border-t-2 border-r-2 border-[var(--color-lime)]"
-          />
-          <span
-            data-bracket
-            className="absolute bottom-0 left-0 h-7 w-7 border-b-2 border-l-2 border-[var(--color-lime)]"
-          />
-          <span
-            data-bracket
-            className="absolute right-0 bottom-0 h-7 w-7 border-r-2 border-b-2 border-[var(--color-lime)]"
-          />
-
-          <div
-            data-card
-            className="bg-[#121317] p-5 font-mono text-[10px] tracking-[0.2em] uppercase"
+    <section ref={root} id="about" className="">
+      <div className="container mx-auto relative flex h-full w-full flex-col justify-center gap-4 px-6 pb-6 md:gap-10 md:py-32 md:pr-16 md:pl-24">
+        <div data-fade>
+          <p
+            data-label
+            className="font-mono text-[10px] tracking-[0.25em] text-mute uppercase md:text-[11px]"
           >
-            <div className="flex items-center justify-between text-mute">
-              <span>Model / Dummy</span>
-              <span className="flex items-center gap-2 text-[var(--color-lime)]">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-lime)]" />
-                Online
-              </span>
-            </div>
-
-            <RobotCanvas />
-
-            <dl className="space-y-2">
-              {[
-                ["Pose", "Idle"],
-                ["Rig", "Placeholder"],
-                ["Format", "GLB"],
-              ].map(([k, v]) => (
-                <div key={k} data-spec className="flex justify-between">
-                  <dt className="text-mute">{k}</dt>
-                  <dd className="text-paper">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+            01 / About
+          </p>
         </div>
 
-        {/* ---------- RIGHT ---------- */}
-        <div className="flex flex-col gap-8">
-          <div className="max-w-xl font-mono text-sm leading-7 md:text-base md:leading-8">
-            <p className="text-[var(--color-lime)]">
-              <span>&gt; </span>
-              <span data-type="whoami" />
-            </p>
-            <p className="text-paper">
-              <span
-                className="uppercase"
-                data-type="Dawood Ahmed — full stack developer"
-              />
-            </p>
-            <p className="text-[var(--color-lime)]">
-              <span>&gt; </span>
-              <span data-type="cat bio.txt" />
-            </p>
-            <p className="text-paper">
-              <span data-type="I work front to back, from schema to pixels. PERN and MERN stacks, shipped end to end." />
-            </p>
-            <p className="text-[var(--color-lime)]">
-              <span>&gt; </span>
-              <span
-                data-cursor
-                className="inline-block h-[1em] w-2.5 translate-y-[2px] bg-[var(--color-lime)]"
-              />
-            </p>
-          </div>
+        <div className="grid items-start gap-5 md:grid-cols-[minmax(260px,320px)_1fr] md:gap-16">
+          <div
+            data-fade
+            className="relative mx-auto w-full max-w-[320px] p-2 md:mx-0 md:p-3"
+          >
+            <span
+              data-bracket
+              className="absolute top-0 left-0 h-5 w-5 border-t-2 border-l-2 border-[var(--color-lime)] md:h-7 md:w-7"
+            />
+            <span
+              data-bracket
+              className="absolute top-0 right-0 h-5 w-5 border-t-2 border-r-2 border-[var(--color-lime)] md:h-7 md:w-7"
+            />
+            <span
+              data-bracket
+              className="absolute bottom-0 left-0 h-5 w-5 border-b-2 border-l-2 border-[var(--color-lime)] md:h-7 md:w-7"
+            />
+            <span
+              data-bracket
+              className="absolute right-0 bottom-0 h-5 w-5 border-r-2 border-b-2 border-[var(--color-lime)] md:h-7 md:w-7"
+            />
 
-          <h2 className="grid font-display text-[clamp(48px,8.5vw,100px)] leading-[0.9] font-black tracking-tight text-[var(--color-lime)] uppercase">
-            {HEADLINE.map(({ text }) => (
-              <div
-                key={text}
-                data-swap
-                className="col-start-1 row-start-1 overflow-hidden whitespace-nowrap"
-              >
-                <span
-                  data-headline-line
-                  className="block will-change-transform"
-                >
-                  {text}
+            <div
+              data-card
+              className="bg-[#121317] p-3 font-mono text-[9px] tracking-[0.2em] uppercase md:p-5 md:text-[10px]"
+            >
+              <div className="flex items-center justify-between text-mute">
+                <span>Model / Dummy</span>
+                <span className="flex items-center gap-2 text-[var(--color-lime)]">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-lime)]" />
+                  Online
                 </span>
               </div>
-            ))}
-          </h2>
+
+              <div className="mx-auto w-[120px] md:w-full">
+                <RobotCanvas />
+              </div>
+
+              <dl className="hidden space-y-2 md:block">
+                {[
+                  ["Pose", "Idle"],
+                  ["Rig", "Placeholder"],
+                  ["Format", "GLB"],
+                ].map(([k, v]) => (
+                  <div key={k} data-spec className="flex justify-between">
+                    <dt className="text-mute">{k}</dt>
+                    <dd className="text-paper">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+
+          {/* ---------- RIGHT ---------- */}
+          <div className="flex min-w-0 flex-col gap-4 md:gap-8">
+            <div
+              data-fade
+              className="max-w-xl font-mono text-xs leading-6 md:text-base md:leading-8"
+            >
+              <p className="text-[var(--color-lime)]">
+                <span>&gt; </span>
+                <span data-type="whoami" />
+              </p>
+              <p className="text-paper">
+                <span
+                  className="uppercase"
+                  data-type="Dawood Ahmed — full stack developer"
+                />
+              </p>
+              <p className="text-[var(--color-lime)]">
+                <span>&gt; </span>
+                <span data-type="cat bio.txt" />
+              </p>
+              <p className="text-paper">
+                <span data-type="I work front to back, from schema to pixels. PERN and MERN stacks, shipped end to end." />
+              </p>
+              <p className="text-[var(--color-lime)]">
+                <span>&gt; </span>
+                <span
+                  data-cursor
+                  className="inline-block h-[1em] w-2.5 translate-y-[2px] bg-[var(--color-lime)]"
+                />
+              </p>
+            </div>
+
+            <h2 className="grid font-display text-[clamp(34px,12vw,100px)] leading-[0.9] font-black tracking-tight text-[var(--color-lime)] uppercase md:text-[clamp(48px,8.5vw,100px)]">
+              {HEADLINE.map(({ text }, i) => {
+                const zi =
+                  i === HEADLINE.length - 1
+                    ? text.toLowerCase().indexOf("w")
+                    : -1;
+                return (
+                  <div
+                    key={text}
+                    data-swap
+                    className="col-start-1 row-start-1 overflow-hidden whitespace-nowrap"
+                  >
+                    <span data-headline-line className="relative block">
+                      {zi === -1 ? (
+                        text
+                      ) : (
+                        <>
+                          {text.slice(0, zi)}
+                          <span data-zoom-target className="inline-block">
+                            {text[zi]}
+                          </span>
+                          {text.slice(zi + 1)}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </h2>
+          </div>
         </div>
       </div>
     </section>

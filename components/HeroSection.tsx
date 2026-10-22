@@ -104,63 +104,68 @@ const HeroSection = ({ start = true }: Props) => {
   );
 
   return (
-    <section ref={container} className="flex w-full flex-col gap-10 py-32">
-      <p className="text-mute text-sm font-normal uppercase">
-        // Full stack Developer - Based in rawalpindi / islamabad
-      </p>
-
-      <h1 className="text-[clamp(56px,10.5vw,152px)] font-display text-paper leading-35 font-extrabold tracking-tight uppercase">
-        <div className="overflow-hidden">
-          <span data-reveal-line className="block">
-            i build
-          </span>
-        </div>
-
-        <div className="overflow-hidden">
-          <span
-            data-reveal-line
-            data-outline
-            className="relative inline-block cursor-default whitespace-nowrap text-transparent [-webkit-text-stroke:2px_var(--color-lime)]"
-          >
-            The web
-            <span
-              data-fill
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 whitespace-nowrap text-[var(--color-lime)] [-webkit-text-stroke:2px_var(--color-lime)]"
-            >
-              The web
-            </span>
-          </span>
-        </div>
-
-        <div className="overflow-hidden">
-          <span data-reveal-line className="block">
-            End to End.
-          </span>
-        </div>
-        <svg
-          className="mt-2 w-[85%]"
-          viewBox="0 0 800 12"
-          preserveAspectRatio="none"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            data-underline
-            d="M 2 7 Q 200 1 400 7 T 798 7"
-            stroke="var(--color-lime)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      </h1>
-      <div className="flex items-center justify-between">
-        <p className="text-md text-mute">
-          I build full stack web apps, from database to interface, with the PERN
-          and MERN stacks.
+    <section ref={container} className="">
+      <div className="container mx-auto flex h-full w-full flex-col justify-center gap-6 px-6 pb-10 md:gap-10 md:px-0 md:py-32">
+        <p className="text-mute text-xs leading-relaxed font-normal tracking-wide uppercase md:text-sm">
+          // Full stack Developer - Based in rawalpindi / islamabad
         </p>
 
-        <Button>View Selected Work →</Button>
+        <h1 className="font-display text-paper text-[clamp(36px,10.5vw,152px)] leading-[0.92] font-extrabold tracking-tight uppercase">
+          <div className="overflow-hidden">
+            <span data-reveal-line className="block whitespace-nowrap">
+              i build
+            </span>
+          </div>
+
+          <div className="overflow-hidden">
+            <span
+              data-reveal-line
+              data-outline
+              className="relative inline-block cursor-default whitespace-nowrap text-transparent [-webkit-text-stroke:1px_var(--color-lime)] md:[-webkit-text-stroke:2px_var(--color-lime)]"
+            >
+              The web
+              <span
+                data-fill
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 whitespace-nowrap text-[var(--color-lime)] [-webkit-text-stroke:1px_var(--color-lime)] md:[-webkit-text-stroke:2px_var(--color-lime)]"
+              >
+                The web
+              </span>
+            </span>
+          </div>
+
+          <div className="overflow-hidden">
+            <span data-reveal-line className="block whitespace-nowrap">
+              End to End.
+            </span>
+          </div>
+
+          <svg
+            className="mt-2 w-full md:w-[85%]"
+            viewBox="0 0 800 12"
+            preserveAspectRatio="none"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              data-underline
+              d="M 2 7 Q 200 1 400 7 T 798 7"
+              stroke="var(--color-lime)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </h1>
+
+        <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+          <p className="text-mute max-w-md text-sm md:text-base">
+            I build full stack web apps, from database to interface, with the
+            PERN and MERN stacks.
+          </p>
+
+          <Button>View Selected Work →</Button>
+        </div>
       </div>
     </section>
   );

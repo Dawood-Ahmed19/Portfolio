@@ -6,6 +6,7 @@ import HeroSection from "@/components/HeroSection";
 import ScrollProgress from "@/components/ScrollProgress";
 import AboutSection from "@/components/AboutSection";
 import SectionStack from "@/components/SectionStack";
+import StackSection from "@/components/StackSection";
 
 export default function Page() {
   const [revealed, setRevealed] = useState(false);
@@ -17,6 +18,7 @@ export default function Page() {
       <SectionStack>
         <HeroSection start={revealed} />
         <AboutSection />
+        <StackSection />
       </SectionStack>
     </main>
   );

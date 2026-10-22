@@ -30,7 +30,7 @@ const ScrollProgress = () => {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed top-0 left-6 z-50 h-screen w-[3px] bg-white/10 md:left-10"
+      className="pointer-events-none fixed top-0 left-6 z-50 h-screen w-[1px] bg-white/10 hidden md:block md:left-10"
     >
       <div ref={bar} className="h-full w-full bg-[var(--color-lime)]" />
     </div>
