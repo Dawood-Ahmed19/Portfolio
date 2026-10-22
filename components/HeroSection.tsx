@@ -26,7 +26,7 @@ const HeroSection = ({ start = true }: Props) => {
         container.current?.querySelector<SVGPathElement>("[data-underline]");
 
       gsap.set(lines, { yPercent: 110, willChange: "transform" });
-      if (underline) gsap.set(underline, { drawSVG: "0%", strokeWidth: 3 });
+      if (underline) gsap.set(underline, { drawSVG: "0%" });
 
       if (!start) return;
 
@@ -48,7 +48,6 @@ const HeroSection = ({ start = true }: Props) => {
           underline,
           {
             drawSVG: "100%",
-            strokeWidth: 1.2,
             duration: 1.3,
             ease: "expo.out",
           },
@@ -152,13 +151,30 @@ const HeroSection = ({ start = true }: Props) => {
             fill="none"
             aria-hidden="true"
           >
+            <defs>
+              <mask
+                id="underline-mask"
+                maskUnits="userSpaceOnUse"
+                x="0"
+                y="-10"
+                width="800"
+                height="32"
+              >
+                <path
+                  data-underline
+                  d="M 2 7 Q 200 3 400 7 T 798 7"
+                  stroke="white"
+                  strokeWidth="20"
+                  strokeLinecap="butt"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </mask>
+            </defs>
+
             <path
-              data-underline
-              d="M 2 7 Q 200 1 400 7 T 798 7"
-              stroke="var(--color-lime)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
+              d="M 2 5 Q 200 1 400 5 T 798 6.6 L 798 7.4 Q 600 9 400 8.4 T 2 9.2 Z"
+              fill="var(--color-lime)"
+              mask="url(#underline-mask)"
             />
           </svg>
         </h1>
