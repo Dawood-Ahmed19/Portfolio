@@ -18,7 +18,7 @@ type Project = {
 };
 
 const PROJECTS: Project[] = [
-  { title: "Business Dashbords", stack: "Next.js · Node · MongoDB", href: "#" },
+  { title: "Business Dashboard", stack: "Next.js · Node · MongoDB", href: "#" },
   { title: "Streaming App", stack: "React · PostgreSQL · NEONDB", href: "#" },
 ];
 
