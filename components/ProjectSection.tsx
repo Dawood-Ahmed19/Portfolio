@@ -194,7 +194,7 @@ const ProjectsSection = () => {
   );
 
   return (
-    <section ref={root} id="work" className="relative h-full">
+    <section ref={root} id="work" className="relative h-full py-20 md:py-32">
       <div className="container relative mx-auto flex w-full flex-col justify-center px-6 pt-24 pb-6 md:justify-start md:px-0 md:pt-[22vh]">
         <p
           data-work-fade

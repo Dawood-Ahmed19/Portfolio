@@ -8,6 +8,7 @@ import AboutSection from "@/components/AboutSection";
 import SectionStack from "@/components/SectionStack";
 import StackSection from "@/components/StackSection";
 import ProjectsSection from "@/components/ProjectSection";
+import ContactSection from "@/components/ContactSection";
 
 export default function Page() {
   const [revealed, setRevealed] = useState(false);
@@ -21,6 +22,7 @@ export default function Page() {
         <AboutSection />
         <StackSection />
         <ProjectsSection />
+        <ContactSection />
       </SectionStack>
     </main>
   );
