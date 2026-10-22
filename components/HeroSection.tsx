@@ -26,7 +26,7 @@ const HeroSection = ({ start = true }: Props) => {
         container.current?.querySelector<SVGPathElement>("[data-underline]");
 
       gsap.set(lines, { yPercent: 110, willChange: "transform" });
-      if (underline) gsap.set(underline, { drawSVG: "0%" });
+      if (underline) gsap.set(underline, { drawSVG: "0%", strokeWidth: 3 });
 
       if (!start) return;
 
@@ -46,7 +46,12 @@ const HeroSection = ({ start = true }: Props) => {
       if (underline) {
         tl.to(
           underline,
-          { drawSVG: "100%", duration: 0.5, ease: "power2.out" },
+          {
+            drawSVG: "100%",
+            strokeWidth: 1.2,
+            duration: 1.3,
+            ease: "expo.out",
+          },
           "-=0.1",
         );
       }
