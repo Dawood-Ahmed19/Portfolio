@@ -1,6 +1,7 @@
 import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import SmoothScroll from "@/components/SmoothScroll";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -24,10 +25,12 @@ export default function RootLayout({
       <body
         className={`bg-ink text-white antialiased ${archivo.variable} ${mono.variable}`}
       >
-        <div>
-          <Navbar />
-          <main>{children}</main>
-        </div>
+        <SmoothScroll>
+          <div>
+            <Navbar />
+            <main>{children}</main>
+          </div>
+        </SmoothScroll>
       </body>
     </html>
   );
