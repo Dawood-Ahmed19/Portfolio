@@ -128,10 +128,10 @@ const AboutSection = () => {
               className="bg-[#121317] p-3 font-mono text-[9px] tracking-[0.2em] uppercase md:p-5 md:text-[10px]"
             >
               <div className="flex items-center justify-between text-mute">
-                <span>Model / Dummy</span>
+                <span>DEV / Profile</span>
                 <span className="flex items-center gap-2 text-[var(--color-lime)]">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-lime)]" />
-                  Online
+                  Available
                 </span>
               </div>
 
@@ -141,9 +141,9 @@ const AboutSection = () => {
 
               <dl className="hidden space-y-2 md:block">
                 {[
-                  ["Pose", "Idle"],
-                  ["Rig", "Placeholder"],
-                  ["Format", "GLB"],
+                  ["STATUS", "IN DEVELOPMENT"],
+                  ["MODE", "BUILD / DEBUG / REPEAT"],
+                  ["FORMAT", "HUMAN.EXE"],
                 ].map(([k, v]) => (
                   <div key={k} data-spec className="flex justify-between">
                     <dt className="text-mute">{k}</dt>
