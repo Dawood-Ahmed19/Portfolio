@@ -5,8 +5,9 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import { Observer } from "gsap/Observer";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollToPlugin);
+gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollToPlugin, Observer);
 
 const HIDDEN = "inset(100% 0% 0% 0%)";
 const SHOWN = "inset(0% 0% 0% 0%)";
@@ -65,6 +66,7 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
       // timeline time at which each panel becomes the "active" one
       const enters: number[] = [0];
       let activeId: string | undefined = idOf(panels[0]) ?? "panel-0";
+      let lastStep = 0; // the step the user is currently settled on
 
       const dispatch = (id: string) =>
         window.dispatchEvent(new CustomEvent("panel-enter", { detail: id }));
@@ -74,9 +76,9 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
         scrollTrigger: {
           trigger: root.current,
           start: "top top",
-          end: () => `+=${total * window.innerHeight * 0.8}`,
+          end: () => `+=${total * window.innerHeight * 0.5}`,
           pin: true,
-          scrub: 0.5,
+          scrub: 0.25, // scroll drives the animation, with light smoothing
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
@@ -94,11 +96,23 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
             }
           },
           snap: {
-            snapTo: 1 / total,
-            directional: true,
-            duration: { min: 0.25, max: 0.7 },
+            // settle on this step or its neighbour only, never further
+            snapTo: (progress: number, self?: ScrollTrigger) => {
+              const raw = progress * total;
+              const dir = self?.direction ?? 1;
+              const base = Math.round(lastStep);
+              const moved = (raw - base) * dir; // distance travelled in the scroll direction
+              if (moved > 0.15)
+                return gsap.utils.clamp(0, total, base + dir) / total;
+              return base / total;
+            },
+            duration: { min: 0.25, max: 0.6 },
             delay: 0,
-            ease: "power2.inOut",
+            ease: "power2.Out",
+            inertia: false,
+            onComplete: (self: ScrollTrigger) => {
+              lastStep = Math.round(self.progress * total);
+            },
           },
         },
       });
@@ -107,6 +121,7 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
       let t = 0;
 
       panels.forEach((panel, p) => {
+        // ---- wipe this panel in (skipped when a zoom opens it) ----
         if (p > 0 && !afterZoom[p]) {
           enters[p] = t;
           tl.to(
@@ -166,6 +181,7 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
           );
           tl.set(panels.slice(0, p), { autoAlpha: 0 }, t);
           tl.set(panels.slice(0, p + 1), { pointerEvents: "none" }, t + 0.6);
+
           const ancestors: HTMLElement[] = [];
           for (
             let el: HTMLElement | null = last;
@@ -224,19 +240,31 @@ const SectionStack = ({ children }: { children: React.ReactNode }) => {
         }
       });
 
+      // ---- nav: jump to a section by id ----
       const st = tl.scrollTrigger!;
+
       const onGoto = (e: Event) => {
         const id = (e as CustomEvent<string>).detail;
         const index = panels.findIndex((p) => idOf(p) === id);
         if (index === -1) return;
-        const y = st.start + (stops[index] / total) * (st.end - st.start);
-        gsap.to(window, {
-          scrollTo: { y, autoKill: false },
-          duration: 1.4,
-          ease: "power3.inOut",
-          overwrite: true,
-        });
+
+        const step = Math.round(stops[index]);
+        lastStep = step; // so the snap doesn't pull it back
+        const y = st.start + (step / total) * (st.end - st.start);
+
+        const lenis = (window as any).lenis;
+        if (lenis) {
+          lenis.scrollTo(y, { duration: 1.4, force: true });
+        } else {
+          gsap.to(window, {
+            scrollTo: { y, autoKill: false },
+            duration: 1.4,
+            ease: "power3.inOut",
+            overwrite: true,
+          });
+        }
       };
+
       window.addEventListener("goto-section", onGoto);
       return () => window.removeEventListener("goto-section", onGoto);
     },

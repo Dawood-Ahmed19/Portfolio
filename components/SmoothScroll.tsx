@@ -14,16 +14,15 @@ export default function SmoothScroll({
 }) {
   useEffect(() => {
     const lenis = new Lenis({
-      lerp: 0.05,
+      lerp: 0.14,
       smoothWheel: true,
+      wheelMultiplier: 0.9,
+      autoRaf: false,
     });
+    (window as any).lenis = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);
-
-    const updateLenis = (time: number) => {
-      lenis.raf(time * 5000);
-    };
-
+    const updateLenis = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(updateLenis);
     gsap.ticker.lagSmoothing(0);
 
