@@ -4,14 +4,9 @@ import { useEffect } from "react";
 import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { setLenis } from "./scrollTo";
 
 gsap.registerPlugin(ScrollTrigger);
-
-declare global {
-  interface Window {
-    lenis?: Lenis;
-  }
-}
 
 export default function SmoothScroll({
   children,
@@ -33,7 +28,7 @@ export default function SmoothScroll({
       wheelMultiplier: 0.95,
       autoRaf: false,
     });
-    window.lenis = lenis;
+    setLenis(lenis);
 
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);
@@ -43,7 +38,7 @@ export default function SmoothScroll({
     return () => {
       gsap.ticker.remove(tick);
       lenis.destroy();
-      window.lenis = undefined;
+      setLenis(undefined);
     };
   }, []);
 

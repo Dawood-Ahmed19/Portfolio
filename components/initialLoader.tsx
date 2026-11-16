@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { CustomEase } from "gsap/CustomEase";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { getLenis } from "./scrollTo";
 
 gsap.registerPlugin(useGSAP, CustomEase, ScrollTrigger);
 CustomEase.create("curtain", "0.76, 0, 0.24, 1");
@@ -43,15 +44,16 @@ export default function InitialLoader({ onReveal, onComplete }: Props) {
         const lock = () => {
           html.style.overflow = "hidden";
           body.style.overflow = "hidden";
-          window.lenis?.stop();
+          getLenis()?.stop();
         };
         const unlock = () => {
           html.style.overflow = "";
           body.style.overflow = "";
-          window.lenis?.start();
+          getLenis()?.start();
         };
 
-        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        if ("scrollRestoration" in history)
+          history.scrollRestoration = "manual";
         window.scrollTo(0, 0);
         lock();
 
