@@ -33,7 +33,7 @@ const Button = ({
 
       const mm = gsap.matchMedia();
       mm.add("(hover: hover) and (pointer: fine)", () => {
-        gsap.set(f, { yPercent: 101 });
+        gsap.set(f, { yPercent: 101, autoAlpha: 1 });
 
         const side = (e: MouseEvent) => {
           const r = el.getBoundingClientRect();
@@ -88,7 +88,7 @@ const Button = ({
       <span
         ref={fill}
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 rounded-full ${fillColor}`}
+        className={`pointer-events-none invisible absolute inset-0 rounded-full ${fillColor}`}
       />
       <span className="relative z-10">{children}</span>
     </button>
