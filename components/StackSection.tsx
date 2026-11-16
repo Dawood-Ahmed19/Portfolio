@@ -3,191 +3,223 @@
 import { useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Draggable } from "gsap/Draggable";
-import { InertiaPlugin } from "gsap/InertiaPlugin";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(useGSAP, Draggable, InertiaPlugin);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const SKILLS = [
-  // frontend
-  { name: "React", hot: true, left: 6, top: 30, rot: -6 },
-  { name: "GSAP", hot: false, left: 24, top: 22, rot: 4 },
-  { name: "Next.js", hot: false, left: 20, top: 50, rot: 5 },
-  { name: "TypeScript", hot: false, left: 4, top: 66, rot: -3 },
-  { name: "Node.js", hot: true, left: 42, top: 34, rot: 4 },
-  { name: "GraphQL", hot: false, left: 50, top: 62, rot: -5 },
-  { name: "PostgreSQL", hot: false, left: 62, top: 24, rot: -4 },
-  { name: "Docker", hot: true, left: 66, top: 50, rot: 6 },
-  { name: "AWS", hot: false, left: 58, top: 70, rot: -2 },
-];
+type Skill = { name: string; hot?: boolean };
+type Group = { label: string; skills: Skill[] };
 
-const GROUPS = [
-  { label: "Frontend", left: 5 },
-  { label: "Backend", left: 42 },
-  { label: "Data & Infra", left: 60 },
+// Same nine skills as before, grouped as the original layout labelled them.
+const GROUPS: Group[] = [
+  {
+    label: "Frontend",
+    skills: [
+      { name: "React", hot: true },
+      { name: "GSAP" },
+      { name: "Next.js" },
+      { name: "TypeScript" },
+    ],
+  },
+  {
+    label: "Backend",
+    skills: [{ name: "Node.js", hot: true }, { name: "GraphQL" }],
+  },
+  {
+    label: "Data & Infra",
+    skills: [
+      { name: "PostgreSQL" },
+      { name: "Docker", hot: true },
+      { name: "AWS" },
+    ],
+  },
 ];
 
 const StackSection = () => {
   const root = useRef<HTMLElement>(null);
-  const box = useRef<HTMLDivElement>(null);
 
   useGSAP(
     (_ctx, contextSafe) => {
-      const pills = gsap.utils.toArray<HTMLElement>(
-        "[data-pill]",
-        root.current,
-      );
-      if (!box.current || !contextSafe) return;
+      if (!contextSafe) return;
+      const mm = gsap.matchMedia();
 
-      gsap.set(pills, {
-        autoAlpha: 0,
-        y: -160,
-        rotation: (i) => SKILLS[i].rot,
-      });
-      gsap.set("[data-stack-fade]", { autoAlpha: 0 });
-      gsap.set("[data-stack-word]", { autoAlpha: 0, yPercent: 20 });
-
-      const drags = Draggable.create(pills, {
-        type: "x,y",
-        bounds: box.current,
-        inertia: true,
-        edgeResistance: 0.85,
-        onPress() {
-          gsap.to(this.target, {
-            scale: 1.08,
-            duration: 0.2,
-            ease: "power2.out",
-          });
-        },
-        onRelease() {
-          gsap.to(this.target, { scale: 1, duration: 0.3, ease: "power2.out" });
-        },
-      });
-      drags.forEach((d) => d.disable()); // no dragging until they've landed
-
-      let played = false;
-      const onEnter = contextSafe((e: Event) => {
-        if ((e as CustomEvent<string>).detail !== "stack" || played) return;
-        played = true;
-
-        gsap
-          .timeline({
-            defaults: { ease: "power3.out" },
-            onComplete: () => drags.forEach((d) => d.enable()),
-          })
-          .to("[data-stack-fade]", {
-            autoAlpha: 1,
-            duration: 0.5,
-            stagger: 0.1,
-          })
-          .to(
-            "[data-stack-word]",
-            { autoAlpha: 1, yPercent: 0, duration: 1 },
-            0.1,
-          )
-          .to(
-            pills,
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: 0.9,
-              stagger: { each: 0.07, from: "random" },
-              ease: "bounce.out",
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const rootEl = root.current;
+        if (!rootEl) return;
+        gsap.fromTo(
+          rootEl,
+          { borderTopLeftRadius: 72, borderTopRightRadius: 72 },
+          {
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            ease: "none",
+            scrollTrigger: {
+              trigger: rootEl,
+              start: "top bottom",
+              end: "top 25%",
+              scrub: true,
             },
-            0.3,
-          );
+          },
+        );
+
+        const heads = gsap.utils.toArray<HTMLElement>("[data-stack-head]", rootEl);
+        const headTrigger = rootEl.querySelector("h2") ?? rootEl;
+        gsap.set(heads, { yPercent: 115 });
+        ScrollTrigger.create({
+          trigger: headTrigger,
+          start: "top 85%",
+          once: true,
+          onEnter: contextSafe(() => {
+            gsap.to(heads, {
+              yPercent: 0,
+              duration: 1.2,
+              stagger: 0.1,
+              ease: "power4.out",
+            });
+          }),
+        });
+
+        gsap.utils.toArray<HTMLElement>("[data-group]", rootEl).forEach((group) => {
+          const rule = group.querySelector<HTMLElement>("[data-rule]");
+          const glabel = group.querySelector<HTMLElement>("[data-glabel]");
+          const skills = gsap.utils.toArray<HTMLElement>("[data-skill]", group);
+          gsap.set(rule, { scaleX: 0, transformOrigin: "left center" });
+          gsap.set(glabel, { autoAlpha: 0, x: -16 });
+          gsap.set(skills, { yPercent: 110 });
+
+          ScrollTrigger.create({
+            trigger: group,
+            start: "top 82%",
+            once: true,
+            onEnter: contextSafe(() => {
+              gsap
+                .timeline({ defaults: { ease: "power4.out" } })
+                .to(rule, { scaleX: 1, duration: 1.2, ease: "expo.out" })
+                .to(glabel, { autoAlpha: 1, x: 0, duration: 0.7 }, 0.1)
+                .to(skills, { yPercent: 0, duration: 1, stagger: 0.09 }, 0.15);
+            }),
+          });
+        });
+
+        const slide = rootEl.querySelector("[data-stack-slide]");
+        if (slide) {
+          gsap.to(slide, {
+            xPercent: -12,
+            ease: "none",
+            scrollTrigger: {
+              trigger: rootEl,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          });
+        }
       });
 
-      window.addEventListener("panel-enter", onEnter);
-      return () => window.removeEventListener("panel-enter", onEnter);
+      // hover: skills nudge (mouse only)
+      mm.add("(hover: hover) and (pointer: fine)", () => {
+        const items = gsap.utils.toArray<HTMLElement>("[data-skill-hit]", root.current);
+        const cleanups = items.map((el) => {
+          const label = el.querySelector("[data-skill]");
+          const dot = el.querySelector("[data-dot]");
+          const tl = gsap
+            .timeline({
+              paused: true,
+              defaults: { duration: 0.4, ease: "power3.out" },
+            })
+            .to(label, { x: 20, color: "#ff4a1c" }, 0)
+            .to(dot, { scale: 1.8 }, 0);
+          const on = contextSafe(() => tl.play());
+          const off = contextSafe(() => tl.reverse());
+          el.addEventListener("mouseenter", on);
+          el.addEventListener("mouseleave", off);
+          return () => {
+            el.removeEventListener("mouseenter", on);
+            el.removeEventListener("mouseleave", off);
+          };
+        });
+        return () => cleanups.forEach((c) => c());
+      });
+
+      return () => mm.revert();
     },
     { scope: root },
   );
 
   return (
-    <section ref={root} id="stack" className="h-full bg-lime">
-      <div className="container relative mx-auto flex w-full flex-col justify-center pt-24 pb-6 md:justify-start md:py-0 md:pt-[22vh]">
-        <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-16">
-          <p
-            data-stack-fade
-            className="font-mono text-[11px] tracking-[0.25em] whitespace-nowrap text-[#0a0a0a]/70 uppercase md:w-40 md:text-xs"
-          >
-            02 / Stack
-          </p>
+    <section
+      ref={root}
+      id="stack"
+      className="bg-ink text-paper relative overflow-hidden py-28 md:py-44"
+    >
+      <div className="wrap">
+        <p className="eyebrow mb-10 opacity-60 md:mb-16">02 / Stack</p>
 
-          <div className="min-w-0 flex-1">
-            <p
-              data-stack-fade
-              className="mb-4 font-mono text-[11px] tracking-[0.25em] text-[#0a0a0a]/70 uppercase md:text-xs"
-            >
-              ↳ Drag the tags
-            </p>
-
-            <div
-              ref={box}
-              className="relative h-[min(50vh,420px)] overflow-hidden border border-[#0a0a0a]/15"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle, rgba(10,10,10,0.18) 1px, transparent 1px)",
-                backgroundSize: "20px 20px",
-              }}
-            >
-              {/* corner brackets */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-2 left-2 h-4 w-4 border-t-2 border-l-2 border-[#0a0a0a]"
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-2 right-2 h-4 w-4 border-t-2 border-r-2 border-[#0a0a0a]"
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute bottom-2 left-2 h-4 w-4 border-b-2 border-l-2 border-[#0a0a0a]"
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute right-2 bottom-2 h-4 w-4 border-r-2 border-b-2 border-[#0a0a0a]"
-              />
-
-              {/* giant outlined word behind the tags */}
-              <span
-                data-stack-word
-                aria-hidden
-                className="pointer-events-none absolute right-4 bottom-[-0.12em] z-0 font-display text-[clamp(88px,17vw,230px)] leading-none font-extrabold tracking-tight text-transparent uppercase select-none [-webkit-text-stroke:2px_rgba(10,10,10,0.2)]"
-              >
-                Stack
+        <div className="mb-16 md:mb-28" data-stack-slide>
+          <h2 className="display text-[clamp(44px,10vw,180px)]">
+            <span className="mask block">
+              <span data-stack-head className="block whitespace-nowrap">
+                Tools of
               </span>
+            </span>
+            <span className="mask block">
+              <span
+                data-stack-head
+                className="serif-i text-signal block whitespace-nowrap text-[1.1em]"
+              >
+                the trade.
+              </span>
+            </span>
+          </h2>
+        </div>
 
-              {/* category labels (desktop only) */}
-              {GROUPS.map(({ label, left }) => (
-                <span
-                  key={label}
-                  data-stack-fade
-                  className="pointer-events-none absolute top-4 z-10 hidden font-mono text-[11px] tracking-[0.2em] text-[#0a0a0a]/70 uppercase md:block"
-                  style={{ left: `${left}%` }}
-                >
-                  {label}
-                </span>
-              ))}
+        <div className="flex flex-col">
+          {GROUPS.map(({ label, skills }) => (
+            <div
+              key={label}
+              data-group
+              className="relative grid gap-5 py-8 md:grid-cols-12 md:gap-8 md:py-12"
+            >
+              <div
+                data-rule
+                aria-hidden="true"
+                className="bg-paper/25 absolute inset-x-0 top-0 h-px"
+              />
+              <p
+                data-glabel
+                className="eyebrow opacity-70 md:col-span-3 md:pt-4"
+              >
+                {label}
+              </p>
 
-              {/* tags */}
-              {SKILLS.map(({ name, hot, left, top }) => (
-                <span
-                  key={name}
-                  data-pill
-                  style={{ left: `${left}%`, top: `${top}%` }}
-                  className={`absolute z-10 cursor-grab touch-none rounded-full border border-[#0a0a0a] font-mono font-semibold select-none active:cursor-grabbing ${
-                    hot
-                      ? "bg-[#0a0a0a] px-5 py-2.5 text-sm text-[var(--color-lime)] md:px-8 md:py-4 md:text-base"
-                      : "px-4 py-2 text-xs text-[#0a0a0a] md:px-6 md:py-3 md:text-sm"
-                  }`}
-                >
-                  {name}
-                </span>
-              ))}
+              <ul className="flex flex-col md:col-span-9">
+                {skills.map(({ name, hot }) => (
+                  <li
+                    key={name}
+                    data-skill-hit
+                    data-cursor="hover"
+                    className="mask w-full py-1 md:py-2"
+                  >
+                    <span
+                      data-skill
+                      className="display flex items-center gap-4 text-[clamp(32px,6vw,96px)]"
+                    >
+                      {name}
+                      {hot ? (
+                        <span
+                          data-dot
+                          aria-label="Core tool"
+                          className="bg-signal inline-block h-[0.14em] w-[0.14em] rounded-full"
+                        />
+                      ) : (
+                        <span data-dot className="hidden" aria-hidden="true" />
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

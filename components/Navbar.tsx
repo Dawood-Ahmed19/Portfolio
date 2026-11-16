@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useGSAP } from "@gsap/react";
+import { useRef, useState } from "react";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+import { scrollToId } from "./scrollTo";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(useGSAP);
 
-const NavLinks = [
+const NAV_LINKS = [
   { label: "About", id: "about" },
   { label: "Stack", id: "stack" },
   { label: "Work", id: "work" },
@@ -19,38 +19,25 @@ const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
 const Navbar = () => {
   const container = useRef<HTMLDivElement>(null);
   const menuTl = useRef<gsap.core.Timeline | null>(null);
-  const tweens = useRef(new WeakMap<HTMLElement, gsap.core.Tween>());
+  const scramble = useRef(new WeakMap<HTMLElement, gsap.core.Tween>());
   const [open, setOpen] = useState(false);
-  const [light, setLight] = useState(false);
-
-  useEffect(() => {
-    const onPanel = (e: Event) => {
-      const d = (e as CustomEvent).detail;
-      const id = typeof d === "string" ? d : d?.id;
-      setLight(id === "stack");
-    };
-    window.addEventListener("panel-enter", onPanel);
-    window.addEventListener("goto-section", onPanel);
-    return () => {
-      window.removeEventListener("panel-enter", onPanel);
-      window.removeEventListener("goto-section", onPanel);
-    };
-  }, []);
-
-  const goTo = (id: string) =>
-    window.dispatchEvent(new CustomEvent("goto-section", { detail: id }));
 
   const { contextSafe } = useGSAP(
     () => {
-      // ---- intro ----
-      gsap.from(container.current, {
-        opacity: 0,
-        y: -15,
-        duration: 1,
-        ease: "power2.out",
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.from("[data-nav-item]", {
+          yPercent: -120,
+          autoAlpha: 0,
+          duration: 1,
+          stagger: 0.06,
+          delay: 0.2,
+          ease: "power4.out",
+        });
       });
 
-      // ---- mobile menu timeline ----
+      // Mobile menu: curtain wipe + staggered links. Duration shrinks for reduced motion.
       gsap.set("[data-menu]", {
         autoAlpha: 0,
         clipPath: "inset(0% 0% 100% 0%)",
@@ -75,37 +62,6 @@ const Navbar = () => {
         .to("[data-bar-top]", { y: 4, rotate: 45, duration: 0.4 }, 0)
         .to("[data-bar-bottom]", { y: -4, rotate: -45, duration: 0.4 }, 0);
 
-      const mm = gsap.matchMedia();
-
-      mm.add(
-        { desktop: "(min-width: 768px)", mobile: "(max-width: 767px)" },
-        (ctx) => {
-          const { desktop } = ctx.conditions as { desktop: boolean };
-
-          const compact = gsap
-            .timeline({
-              paused: true,
-              defaults: { duration: 0.35, ease: "power2.out" },
-            })
-            .to("[data-nav-bg]", { autoAlpha: 1 }, 0)
-            .to(
-              "[data-nav-inner]",
-              {
-                paddingTop: desktop ? 20 : 12,
-                paddingBottom: desktop ? 20 : 12,
-              },
-              0,
-            );
-
-          ScrollTrigger.create({
-            start: 40,
-            end: "max",
-            onToggle: (self) =>
-              self.isActive ? compact.play() : compact.reverse(),
-          });
-        },
-      );
-
       return () => mm.revert();
     },
     { scope: container },
@@ -114,23 +70,24 @@ const Navbar = () => {
   const setMenu = contextSafe((next: boolean) => {
     setOpen(next);
     document.body.style.overflow = next ? "hidden" : "";
+    if (next) window.lenis?.stop();
+    else window.lenis?.start();
     if (next) menuTl.current?.timeScale(1).play();
     else menuTl.current?.timeScale(1.4).reverse();
   });
 
-  useEffect(() => {
-    const onResize = () => {
-      if (window.innerWidth >= 768 && open) setMenu(false);
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [open, setMenu]);
+  const handleNav = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    if (open) setMenu(false);
+    // let the menu start closing before the scroll begins
+    window.setTimeout(() => scrollToId(id), open ? 250 : 0);
+  };
 
   const scrambleText = contextSafe(
-    (element: HTMLAnchorElement, text: string) => {
-      tweens.current.get(element)?.kill();
+    (element: HTMLElement, text: string) => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      scramble.current.get(element)?.kill();
       const obj = { progress: 0 };
-
       const tween = gsap.to(obj, {
         progress: 1,
         duration: 0.5,
@@ -150,59 +107,58 @@ const Navbar = () => {
           element.textContent = text;
         },
       });
-      tweens.current.set(element, tween);
+      scramble.current.set(element, tween);
     },
   );
 
-  const handleNav = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    if (open) setMenu(false);
-    goTo(id);
-  };
-
   return (
-    <div
-      ref={container}
-      data-light={light && !open}
-      className="group fixed inset-x-0 top-0 z-40 w-full"
-    >
-      <div
-        data-nav-bg
-        aria-hidden="true"
-        className="invisible absolute inset-0 -z-20 border-b border-white/10 bg-[#0a0a0a]/80 opacity-0 backdrop-blur-md transition-colors duration-300 group-data-[light=true]:border-ink/10 group-data-[light=true]:bg-lime/80"
-      />
-      <div
-        data-nav-inner
-        className="container mx-auto flex items-center justify-between px-6 py-6 md:py-12"
+    <div ref={container}>
+      <header className="fixed inset-x-0 top-0 z-50 text-white mix-blend-difference">
+      <nav
+        aria-label="Primary"
+        className="wrap flex items-center justify-between py-5 md:py-7"
       >
-        {/* logo */}
-        <h1 className="text-sm font-medium uppercase text-paper transition-colors duration-300 group-data-[light=true]:text-ink">
-          Dawood Ahmed / DEV
-        </h1>
+        <a
+          href="#top"
+          data-cursor="hover"
+          onClick={(e) => {
+            e.preventDefault();
+            if (open) setMenu(false);
+            if (window.lenis) window.lenis.scrollTo(0, { duration: 1.4 });
+            else window.scrollTo(0, 0);
+          }}
+          className="overflow-hidden"
+        >
+          <span data-nav-item className="eyebrow block">
+            Dawood Ahmed<span className="opacity-60"> / Dev</span>
+          </span>
+        </a>
 
-        {/* desktop links */}
-        <ul className="hidden items-center gap-8 md:flex">
-          {NavLinks.map(({ label, id }) => (
-            <li key={id}>
+        <ul className="hidden items-center gap-10 md:flex">
+          {NAV_LINKS.map(({ label, id }, i) => (
+            <li key={id} className="overflow-hidden">
               <a
+                data-nav-item
+                data-cursor="hover"
                 href={`#${id}`}
-                className="text-sm text-paper no-underline transition-colors duration-300 hover:cursor-pointer hover:text-lime group-data-[light=true]:text-ink group-data-[light=true]:hover:text-ink/60"
                 onClick={(e) => handleNav(e, id)}
                 onMouseEnter={(e) => scrambleText(e.currentTarget, label)}
+                className="eyebrow block no-underline"
               >
                 {label}
               </a>
+              <span className="sr-only">{i + 1}</span>
             </li>
           ))}
         </ul>
 
-        {/* desktop status */}
-        <div className="hidden items-center gap-2 text-sm text-paper transition-colors duration-300 group-data-[light=true]:text-ink md:flex">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-lime group-data-[light=true]:bg-ink" />
-          <span className="animate-pulse">Available For Work</span>
+        <div className="hidden overflow-hidden md:block">
+          <span data-nav-item className="eyebrow flex items-center gap-2">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            Available for work
+          </span>
         </div>
 
-        {/* mobile toggle */}
         <button
           type="button"
           aria-label={open ? "Close menu" : "Open menu"}
@@ -210,32 +166,27 @@ const Navbar = () => {
           onClick={() => setMenu(!open)}
           className="flex h-10 w-10 flex-col items-center justify-center gap-[6px] md:hidden"
         >
-          <span
-            data-bar-top
-            className="block h-[2px] w-6 bg-paper transition-colors duration-300 group-data-[light=true]:bg-ink"
-          />
-          <span
-            data-bar-bottom
-            className="block h-[2px] w-6 bg-paper transition-colors duration-300 group-data-[light=true]:bg-ink"
-          />
+          <span data-bar-top className="block h-[2px] w-6 bg-white" />
+          <span data-bar-bottom className="block h-[2px] w-6 bg-white" />
         </button>
-      </div>
+      </nav>
+      </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu sits under the blended header so its text stays legible */}
       <div
         data-menu
-        className="absolute inset-x-0 top-0 -z-10 flex h-screen flex-col justify-center bg-[#0a0a0a] px-6 md:hidden"
+        className="bg-ink text-paper fixed inset-0 z-40 flex flex-col justify-center px-6 md:hidden"
       >
-        <ul className="flex flex-col gap-4">
-          {NavLinks.map(({ label, id }, i) => (
+        <ul className="flex flex-col gap-3">
+          {NAV_LINKS.map(({ label, id }, i) => (
             <li key={id} className="overflow-hidden">
               <a
                 data-menu-link
                 href={`#${id}`}
                 onClick={(e) => handleNav(e, id)}
-                className="block font-display text-[clamp(40px,14vw,72px)] font-black uppercase leading-none text-paper no-underline active:text-lime"
+                className="display block text-[clamp(44px,15vw,84px)] no-underline"
               >
-                <span className="mr-3 font-mono text-xs text-lime">
+                <span className="mr-3 align-top font-mono text-xs tracking-widest opacity-60">
                   0{i + 1}
                 </span>
                 {label}
@@ -243,11 +194,10 @@ const Navbar = () => {
             </li>
           ))}
         </ul>
-
-        <div className="mt-12 flex items-center gap-2 text-sm text-paper">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-lime" />
-          <span>Available For Work</span>
-        </div>
+        <p className="eyebrow mt-12 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+          Available for work
+        </p>
       </div>
     </div>
   );

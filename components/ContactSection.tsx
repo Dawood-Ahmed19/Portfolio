@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
-import { useState, useEffect } from "react";
 
-gsap.registerPlugin(useGSAP, DrawSVGPlugin);
+gsap.registerPlugin(useGSAP, ScrollTrigger, DrawSVGPlugin);
 
 const EMAIL = "gfxwork66@gmail.com";
 
@@ -27,79 +27,82 @@ const ContactSection = () => {
   useGSAP(
     (_ctx, contextSafe) => {
       if (!root.current || !contextSafe) return;
-
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.set("[data-contact-fade]", { autoAlpha: 0, y: 20 });
-        gsap.set("[data-contact-word]", { yPercent: 110 });
-        gsap.set("[data-contact-circle] path", { drawSVG: "0%" });
-        gsap.set("[data-contact-underline] path", { drawSVG: "0%" });
-
-        let played = false;
-        const onEnter = contextSafe!((e: Event) => {
-          if ((e as CustomEvent<string>).detail !== "contact" || played) return;
-          played = true;
-
-          gsap
-            .timeline({ defaults: { ease: "power3.out" } })
-            .to("[data-contact-label]", { autoAlpha: 1, y: 0, duration: 0.5 })
-            .to(
-              "[data-contact-word]",
-              { yPercent: 0, duration: 1, stagger: 0.12, ease: "power4.out" },
-              0.15,
-            )
-            .to(
-              "[data-contact-circle] path",
-              { drawSVG: "100%", duration: 1.4, ease: "power2.inOut" },
-              0.7,
-            )
-            .to(
-              "[data-contact-item]",
-              { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.1 },
-              1.0,
-            )
-            .to(
-              "[data-contact-footer]",
-              { autoAlpha: 1, y: 0, duration: 0.6 },
-              1.4,
-            );
-        });
-
-        window.addEventListener("panel-enter", onEnter);
-        return () => window.removeEventListener("panel-enter", onEnter);
-      });
-
-      mm.add("(hover: hover) and (pointer: fine)", () => {
-        const links = gsap.utils.toArray<HTMLElement>(
-          "[data-contact-link]",
-          root.current,
+        const rootEl = root.current;
+        if (!rootEl) return;
+        gsap.fromTo(
+          rootEl,
+          { borderTopLeftRadius: 72, borderTopRightRadius: 72 },
+          {
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            ease: "none",
+            scrollTrigger: {
+              trigger: rootEl,
+              start: "top bottom",
+              end: "top 25%",
+              scrub: true,
+            },
+          },
         );
-        const cleanups = links.map((link) => {
-          const path = link.querySelector("[data-contact-underline] path");
-          if (!path) return () => {};
-          const tl = gsap
-            .timeline({
-              paused: true,
-              defaults: { duration: 0.35, ease: "power2.out" },
-            })
-            .to(path, { drawSVG: "100%" }, 0)
-            .to(link, { color: "#C6FF3D" }, 0);
-          const on = () => tl.play();
-          const off = () => tl.reverse();
-          link.addEventListener("mouseenter", on);
-          link.addEventListener("mouseleave", off);
-          link.addEventListener("focus", on);
-          link.addEventListener("blur", off);
-          return () => {
-            link.removeEventListener("mouseenter", on);
-            link.removeEventListener("mouseleave", off);
-            link.removeEventListener("focus", on);
-            link.removeEventListener("blur", off);
-          };
+
+        const words = gsap.utils.toArray<HTMLElement>("[data-word]", rootEl);
+        const circle = rootEl.querySelector<SVGPathElement>("[data-circle] path");
+        const fades = gsap.utils.toArray<HTMLElement>("[data-contact-fade]", rootEl);
+
+        gsap.set(words, { yPercent: 115 });
+        gsap.set(fades, { autoAlpha: 0, y: 20 });
+        if (circle) gsap.set(circle, { drawSVG: "0%" });
+
+        ScrollTrigger.create({
+          trigger: rootEl,
+          start: "top 55%",
+          once: true,
+          onEnter: contextSafe(() => {
+            const tl = gsap
+              .timeline({ defaults: { ease: "power3.out" } })
+              .to(words, { yPercent: 0, duration: 1.3, stagger: 0.12, ease: "power4.out" });
+            if (circle) {
+              tl.to(circle, { drawSVG: "100%", duration: 1.6, ease: "power2.inOut" }, 0.6);
+            }
+            tl.to(fades, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.8);
+          }),
         });
-        return () => cleanups.forEach((c) => c());
       });
+
+      mm.add(
+        "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
+        () => {
+          const links = gsap.utils.toArray<HTMLElement>("[data-link]", root.current);
+          const cleanups = links.map((link) => {
+            const bar = link.querySelector("[data-bar]");
+            if (!bar) return () => {};
+            gsap.set(bar, { scaleX: 0, transformOrigin: "left center" });
+            const tl = gsap
+              .timeline({
+                paused: true,
+                defaults: { duration: 0.45, ease: "power3.out" },
+              })
+              .to(bar, { scaleX: 1 }, 0)
+              .to(link, { color: "#ff4a1c" }, 0);
+            const on = contextSafe(() => tl.play());
+            const off = contextSafe(() => tl.reverse());
+            link.addEventListener("mouseenter", on);
+            link.addEventListener("mouseleave", off);
+            link.addEventListener("focus", on);
+            link.addEventListener("blur", off);
+            return () => {
+              link.removeEventListener("mouseenter", on);
+              link.removeEventListener("mouseleave", off);
+              link.removeEventListener("focus", on);
+              link.removeEventListener("blur", off);
+            };
+          });
+          return () => cleanups.forEach((c) => c());
+        },
+      );
 
       return () => mm.revert();
     },
@@ -115,39 +118,39 @@ const ContactSection = () => {
       gsap.delayedCall(1.6, () => {
         el.textContent = "Copy email";
       });
-    } catch (error: any) {
-      console.error(error.message);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
     }
   };
 
   return (
-    <section ref={root} id="contact" className="relative h-full">
-      <div className="container mx-auto flex w-full flex-col justify-center gap-8 px-6 pt-24 pb-6 md:justify-start md:gap-12 md:px-0 md:pt-[20vh]">
-        <p
-          data-contact-label
-          data-contact-fade
-          className="font-mono text-[11px] tracking-[0.25em] text-mute uppercase md:text-xs"
-        >
-          04 / Contact
-        </p>
+    <section
+      ref={root}
+      id="contact"
+      className="bg-ink text-paper relative overflow-hidden pt-28 md:pt-44"
+    >
+      <div className="wrap">
+        <p className="eyebrow mb-10 opacity-60 md:mb-16">04 / Contact</p>
 
-        {/* headline with the drawn circle */}
-        <div className="relative w-fit px-4 py-4 md:px-14 md:py-8">
-          <h2 className="font-display text-[clamp(44px,9vw,128px)] leading-none font-extrabold tracking-tight text-paper uppercase">
-            <span className="inline-block overflow-hidden pr-[0.15em] align-bottom">
-              <span data-contact-word className="inline-block">
+        <div className="relative w-fit px-2 py-6 md:px-16 md:py-12">
+          <h2 className="display text-[clamp(52px,12vw,220px)]">
+            <span className="mask pr-[0.15em]">
+              <span data-word className="inline-block">
                 Let’s
               </span>
             </span>
-            <span className="inline-block overflow-hidden align-bottom">
-              <span data-contact-word className="inline-block">
+            <span className="mask">
+              <span
+                data-word
+                className="serif-i text-signal inline-block text-[1.1em]"
+              >
                 build.
               </span>
             </span>
           </h2>
 
           <svg
-            data-contact-circle
+            data-circle
             aria-hidden
             viewBox="0 0 600 200"
             preserveAspectRatio="none"
@@ -156,7 +159,7 @@ const ContactSection = () => {
             <path
               d="M300 10 C 520 10 590 60 580 110 C 570 170 400 195 300 192 C 120 190 15 150 25 95 C 35 40 150 14 330 8"
               fill="none"
-              stroke="var(--color-lime)"
+              stroke="#ff4a1c"
               strokeWidth="2.5"
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
@@ -164,76 +167,63 @@ const ContactSection = () => {
           </svg>
         </div>
 
-        {/* contact links */}
-        <div className="flex flex-wrap items-center gap-x-10 gap-y-3 font-mono text-sm tracking-[0.06em] text-paper md:text-base">
+        <div className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 md:mt-20">
           <a
-            data-contact-item
             data-contact-fade
-            data-contact-link
+            data-link
+            data-cursor="hover"
             href={`mailto:${EMAIL}`}
-            className="relative inline-flex min-h-11 items-center no-underline"
+            className="display relative inline-flex min-h-11 items-center text-[clamp(22px,4vw,60px)] normal-case no-underline"
           >
             {EMAIL}
-            <Underline />
+            <Bar />
           </a>
 
           <button
-            data-contact-item
             data-contact-fade
+            data-cursor="hover"
             type="button"
             onClick={copyEmail}
-            className="inline-flex min-h-11 items-center border border-paper/30 px-4 text-xs tracking-[0.15em] uppercase transition-colors hover:border-lime hover:text-lime"
+            className="eyebrow border-paper/30 hover:border-signal hover:text-signal inline-flex min-h-11 cursor-pointer items-center rounded-full border px-5 transition-colors"
           >
             <span ref={copyLabel}>Copy email</span>
           </button>
+        </div>
 
+        <div className="mt-8 flex flex-wrap gap-x-10 gap-y-3">
           {LINKS.map(({ label, href }) => (
             <a
               key={label}
-              data-contact-item
               data-contact-fade
-              data-contact-link
+              data-link
+              data-cursor="hover"
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="relative inline-flex min-h-11 items-center no-underline"
+              className="eyebrow relative inline-flex min-h-11 items-center no-underline"
             >
-              {label} ↗<Underline />
+              {label} ↗<Bar />
             </a>
           ))}
         </div>
       </div>
 
-      <footer
-        data-contact-footer
-        data-contact-fade
-        className="absolute inset-x-0 bottom-6"
-      >
-        <div className="container mx-auto flex justify-between border-t border-white/10 px-6 pt-5 font-mono text-[11px] tracking-[0.1em] text-mute uppercase md:px-0 md:text-xs">
-          <span>© {year} Dawood Ahmed</span>
-          <span className="hidden sm:inline uppercase">Rawalpindi</span>
+      <footer data-contact-fade className="mt-28 pb-8 md:mt-44">
+        <div className="wrap eyebrow border-paper/15 flex justify-between border-t pt-6 text-[0.65rem] opacity-70">
+          <span>© {year ?? ""} Dawood Ahmed</span>
+          <span>Rawalpindi / Islamabad</span>
         </div>
       </footer>
     </section>
   );
 };
 
-const Underline = () => (
-  <svg
-    data-contact-underline
+const Bar = () => (
+  <span
+    data-bar
     aria-hidden
-    viewBox="0 0 100 4"
-    preserveAspectRatio="none"
-    className="pointer-events-none absolute bottom-1 left-0 h-1 w-full overflow-visible"
-  >
-    <path
-      d="M0 2 H100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      vectorEffect="non-scaling-stroke"
-    />
-  </svg>
+    className="pointer-events-none absolute bottom-1 left-0 block h-px w-full bg-current"
+  />
 );
 
 export default ContactSection;

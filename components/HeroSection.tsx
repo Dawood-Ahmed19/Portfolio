@@ -3,189 +3,171 @@
 import { useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./Button";
+import { scrollToId } from "./scrollTo";
 
-gsap.registerPlugin(useGSAP, DrawSVGPlugin);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 type Props = {
   start?: boolean;
 };
 
-const HeroSection = ({ start = true }: Props) => {
-  const container = useRef<HTMLDivElement>(null);
+const TICKER = [
+  "React",
+  "Next.js",
+  "TypeScript",
+  "Node.js",
+  "PostgreSQL",
+  "GraphQL",
+  "GSAP",
+  "Docker",
+  "AWS",
+];
 
+const HeroSection = ({ start = true }: Props) => {
+  const root = useRef<HTMLElement>(null);
+
+  // Entrance: runs once the loader has lifted. Hidden state is applied
+  // only when motion is allowed, so reduced-motion users see everything.
   useGSAP(
     () => {
-      const lines = gsap.utils.toArray<HTMLElement>(
-        "[data-reveal-line]",
-        container.current,
-      );
+      const mm = gsap.matchMedia();
 
-      const underline =
-        container.current?.querySelector<SVGPathElement>("[data-underline]");
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const lines = gsap.utils.toArray<HTMLElement>("[data-line]", root.current);
+        const fades = gsap.utils.toArray<HTMLElement>("[data-fade]", root.current);
+        const rule = root.current?.querySelector<HTMLElement>("[data-rule]");
 
-      gsap.set(lines, { yPercent: 110, willChange: "transform" });
-      if (underline) gsap.set(underline, { drawSVG: "0%" });
+        gsap.set(lines, { yPercent: 115 });
+        gsap.set(fades, { autoAlpha: 0, y: 16 });
+        if (rule) gsap.set(rule, { scaleX: 0, transformOrigin: "left center" });
+        if (!start) return;
 
-      if (!start) return;
+        gsap
+          .timeline({ delay: 0.1, defaults: { ease: "power4.out" } })
+          .to(lines, { yPercent: 0, duration: 1.3, stagger: 0.12 })
+          .to(rule, { scaleX: 1, duration: 1.4, ease: "expo.out" }, 0.3)
+          .to(fades, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.55);
+      });
 
-      const tl = gsap.timeline({ delay: 0.15 });
-
-      tl.fromTo(
-        lines,
-        { yPercent: 110 },
-        {
-          yPercent: 0,
-          duration: 1,
-          stagger: 0.18,
-          ease: "power4.out",
-        },
-      );
-
-      if (underline) {
-        tl.to(
-          underline,
-          {
-            drawSVG: "100%",
-            duration: 1.3,
-            ease: "expo.out",
-          },
-          "-=0.1",
-        );
-      }
+      return () => mm.revert();
     },
-
-    { scope: container, dependencies: [start] },
+    { scope: root, dependencies: [start] },
   );
 
+  // Scroll: headline drifts up slower than the page; ticker slides sideways.
   useGSAP(
-    (_ctx, contextSafe) => {
-      const outline =
-        container.current?.querySelector<HTMLElement>("[data-outline]");
-      const fill = container.current?.querySelector<HTMLElement>("[data-fill]");
-      if (!outline || !fill || !contextSafe) return;
+    () => {
+      const mm = gsap.matchMedia();
 
-      gsap.set(fill, { clipPath: "circle(0% at 0% 100%)" });
-
-      const corner = (e: MouseEvent) => {
-        const r = outline.getBoundingClientRect();
-        const x = e.clientX < r.left + r.width / 2 ? 0 : 100;
-        const y = e.clientY < r.top + r.height / 2 ? 0 : 100;
-        return { x, y };
-      };
-
-      const onEnter = contextSafe((e: MouseEvent) => {
-        const { x, y } = corner(e);
-        gsap.set(fill, { clipPath: `circle(0% at ${x}% ${y}%)` });
-        gsap.to(fill, {
-          clipPath: `circle(150% at ${x}% ${y}%)`,
-          duration: 0.7,
-          ease: "power3.out",
-          overwrite: true,
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.to("[data-parallax]", {
+          yPercent: -18,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+        gsap.to("[data-serif]", {
+          xPercent: 8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
         });
       });
 
-      const onLeave = contextSafe((e: MouseEvent) => {
-        const { x, y } = corner(e);
-        gsap.to(fill, {
-          clipPath: `circle(0% at ${x}% ${y}%)`,
-          duration: 0.5,
-          ease: "power3.inOut",
-          overwrite: true,
-        });
-      });
-
-      outline.addEventListener("mouseenter", onEnter);
-      outline.addEventListener("mouseleave", onLeave);
-
-      return () => {
-        outline.removeEventListener("mouseenter", onEnter);
-        outline.removeEventListener("mouseleave", onLeave);
-      };
+      return () => mm.revert();
     },
-    { scope: container },
+    { scope: root },
   );
 
   return (
-    <section ref={container} className="py-30 md:py-32">
-      <div className="container mx-auto flex h-full w-full flex-col justify-center gap-6 px-6 pb-10 md:gap-10 md:px-0">
-        <p className="text-mute text-xs leading-relaxed font-normal tracking-wide uppercase md:text-sm">
-          // Full stack Developer - Based in rawalpindi / islamabad
-        </p>
+    <section
+      ref={root}
+      id="top"
+      className="relative flex min-h-svh flex-col justify-between overflow-hidden pt-28 md:pt-36"
+    >
+      <div className="wrap flex flex-col gap-10 md:gap-14">
+        <div
+          data-fade
+          className="eyebrow text-mute flex flex-wrap items-center justify-between gap-x-8 gap-y-2"
+        >
+          <span>// Full stack developer</span>
+          <span>Based in Rawalpindi / Islamabad</span>
+        </div>
 
-        <h1 className="font-display text-paper text-[clamp(36px,10.5vw,152px)] leading-[0.92] font-extrabold tracking-tight uppercase">
-          <div className="overflow-hidden">
-            <span data-reveal-line className="block whitespace-nowrap">
-              i build
+        <h1
+          data-parallax
+          className="display text-[clamp(52px,13.2vw,260px)] will-change-transform"
+        >
+          <span className="mask block">
+            <span data-line className="block whitespace-nowrap">
+              I build
             </span>
-          </div>
-
-          <div className="overflow-hidden">
-            <span
-              data-reveal-line
-              data-outline
-              className="relative inline-block cursor-default whitespace-nowrap text-transparent [-webkit-text-stroke:1px_var(--color-lime)] md:[-webkit-text-stroke:2px_var(--color-lime)]"
-            >
-              The web
+          </span>
+          <span className="mask block">
+            <span data-line className="block whitespace-nowrap">
               <span
-                data-fill
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 whitespace-nowrap text-[var(--color-lime)] [-webkit-text-stroke:1px_var(--color-lime)] md:[-webkit-text-stroke:2px_var(--color-lime)]"
+                data-serif
+                className="serif-i text-signal inline-block pr-[0.12em] text-[1.12em] leading-[0.8]"
               >
-                The web
+                the web
               </span>
             </span>
-          </div>
-
-          <div className="overflow-hidden">
-            <span data-reveal-line className="block whitespace-nowrap">
-              End to End.
+          </span>
+          <span className="mask block">
+            <span data-line className="block whitespace-nowrap">
+              end to end.
             </span>
-          </div>
-
-          <svg
-            className="mt-2 w-full md:w-[85%]"
-            viewBox="0 0 800 12"
-            preserveAspectRatio="none"
-            fill="none"
-            aria-hidden="true"
-          >
-            <defs>
-              <mask
-                id="underline-mask"
-                maskUnits="userSpaceOnUse"
-                x="0"
-                y="-10"
-                width="800"
-                height="32"
-              >
-                <path
-                  data-underline
-                  d="M 2 7 Q 200 3 400 7 T 798 7"
-                  stroke="white"
-                  strokeWidth="20"
-                  strokeLinecap="butt"
-                  vectorEffect="non-scaling-stroke"
-                />
-              </mask>
-            </defs>
-
-            <path
-              d="M 2 5 Q 200 1 400 5 T 798 6.6 L 798 7.4 Q 600 9 400 8.4 T 2 9.2 Z"
-              fill="var(--color-lime)"
-              mask="url(#underline-mask)"
-            />
-          </svg>
+          </span>
         </h1>
 
-        <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
-          <p className="text-mute max-w-md text-sm md:text-base">
+        <div
+          data-rule
+          aria-hidden="true"
+          className="bg-ink h-px w-full origin-left"
+        />
+
+        <div className="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+          <p
+            data-fade
+            className="max-w-md text-base leading-relaxed md:max-w-lg md:text-xl"
+          >
             I build full stack web apps, from database to interface, with the
             PERN and MERN stacks.
           </p>
 
-          <Button>View Selected Work →</Button>
+          <div data-fade>
+            <Button onClick={() => scrollToId("work")}>
+              View Selected Work →
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Stack ticker */}
+      <div
+        data-fade
+        aria-hidden="true"
+        className="border-ink/20 mt-14 overflow-hidden border-y py-4 md:mt-20"
+      >
+        <div className="marquee-track display flex gap-10 text-[clamp(20px,3vw,40px)] whitespace-nowrap">
+          {[...TICKER, ...TICKER, ...TICKER, ...TICKER].map((t, i) => (
+            <span key={`${t}-${i}`} className="flex items-center gap-10">
+              {t}
+              <span className="text-signal serif-i text-[1.2em] leading-none">
+                ✺
+              </span>
+            </span>
+          ))}
         </div>
       </div>
     </section>

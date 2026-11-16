@@ -16,12 +16,12 @@ type Props = {
   onComplete?: () => void;
 };
 
-export default function initialLoader({ onReveal, onComplete }: Props) {
+export default function InitialLoader({ onReveal, onComplete }: Props) {
   const [year, setYear] = useState<number | null>(null);
+  const [unmounted, setUnmounted] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const digitsRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const [unmounted, setUnmounted] = useState(false);
 
   useEffect(() => {
     setYear(new Date().getFullYear());
@@ -40,22 +40,22 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const html = document.documentElement;
         const body = document.body;
-
         const lock = () => {
           html.style.overflow = "hidden";
           body.style.overflow = "hidden";
+          window.lenis?.stop();
         };
         const unlock = () => {
           html.style.overflow = "";
           body.style.overflow = "";
+          window.lenis?.start();
         };
-        gsap.set("body", { overflow: "hidden" });
-        if ("scrollRestoration" in history)
-          history.scrollRestoration = "manual";
+
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
         window.scrollTo(0, 0);
         lock();
-        const counter = { v: 0 };
 
+        const counter = { v: 0 };
         const paint = () => {
           if (digitsRef.current) {
             digitsRef.current.textContent = String(
@@ -64,7 +64,6 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
           }
           gsap.set(barRef.current, { scaleX: counter.v / 100 });
         };
-
         paint();
 
         const tl = gsap.timeline({
@@ -89,7 +88,7 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
           )
           .to(
             counter,
-            { v: 92, duration: 2.2, ease: "power1.out", onUpdate: paint },
+            { v: 92, duration: 2, ease: "power1.out", onUpdate: paint },
             0.2,
           )
           .addPause("+=0", () => {
@@ -99,22 +98,22 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
           })
           .to(counter, {
             v: 100,
-            duration: 0.55,
+            duration: 0.5,
             ease: "power2.inOut",
             onUpdate: paint,
           })
           .addLabel("exit", "+=0.2")
           .to(
             ".ldr-content",
-            { yPercent: -10, autoAlpha: 0, duration: 0.55, ease: "power2.in" },
+            { yPercent: -10, autoAlpha: 0, duration: 0.5, ease: "power2.in" },
             "exit",
           )
-          .call(() => onReveal?.(), undefined, "exit+=0.22")
+          .call(() => onReveal?.(), undefined, "exit+=0.25")
           .to(
             ".ldr-col",
             {
               yPercent: -101,
-              duration: 1.2,
+              duration: 1.1,
               ease: "curtain",
               stagger: { each: 0.07, from: "start" },
             },
@@ -122,7 +121,7 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
           );
 
         return () => {
-          gsap.set("body", { overflow: "" });
+          unlock();
         };
       });
 
@@ -144,20 +143,18 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
         {Array.from({ length: COLUMNS }).map((_, i) => (
           <div
             key={i}
-            className="ldr-col h-full flex-1 border-r border-black/15 bg-acid will-change-transform last:border-r-0"
+            className="ldr-col bg-ink h-full flex-1 border-r border-paper/10 will-change-transform last:border-r-0"
           />
         ))}
       </div>
 
-      <div className="ldr-content absolute inset-0 flex flex-col justify-between p-5 text-ink md:p-8">
-        <div className="flex justify-between font-mono text-[10px] uppercase tracking-[0.3em] md:text-xs">
+      <div className="ldr-content text-paper absolute inset-0 flex flex-col justify-between p-5 md:p-8">
+        <div className="eyebrow flex justify-between">
           <span className="overflow-hidden">
-            <span className="ldr-meta block uppercase">
-              [Dawood Ahmed / DEV]
-            </span>
+            <span className="ldr-meta block">[Dawood Ahmed / Dev]</span>
           </span>
           <span className="overflow-hidden">
-            <span className="ldr-meta block">My Portfolio</span>
+            <span className="ldr-meta block">Portfolio</span>
           </span>
         </div>
 
@@ -165,29 +162,29 @@ export default function initialLoader({ onReveal, onComplete }: Props) {
           <div className="ldr-digits flex items-end will-change-transform">
             <span
               ref={digitsRef}
-              className="font-display text-[23vw] font-black leading-[0.76] tracking-[-0.06em] tabular-nums"
+              className="display text-[26vw] leading-[0.76] tabular-nums"
             >
               000
             </span>
-            <span className="mb-[2.4vw] ml-[0.8vw] font-display text-[6vw] font-black leading-none">
+            <span className="serif-i text-signal mb-[2vw] ml-[1vw] text-[8vw] leading-none">
               %
             </span>
           </div>
         </div>
 
         <div className="space-y-3 md:space-y-4">
-          <div className="relative h-px overflow-hidden bg-black/20">
+          <div className="relative h-px overflow-hidden bg-paper/20">
             <div
               ref={barRef}
-              className="absolute inset-0 origin-left scale-x-0 bg-ink"
+              className="bg-signal absolute inset-0 origin-left scale-x-0"
             />
           </div>
-          <div className="flex justify-between font-mono text-[10px] uppercase tracking-[0.3em] md:text-xs">
+          <div className="eyebrow flex justify-between">
             <span className="overflow-hidden">
               <span className="ldr-meta block">Full Stack Developer</span>
             </span>
             <span className="overflow-hidden">
-              <span className="ldr-meta block">Portfolio {year}</span>
+              <span className="ldr-meta block">{year ?? ""}</span>
             </span>
           </div>
         </div>

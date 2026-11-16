@@ -11,95 +11,86 @@ type Props = {
   onClick?: () => void;
   className?: string;
   type?: "button" | "submit";
+  tone?: "ink" | "paper";
 };
 
+/** Pill button: an accent fill sweeps in from the side the cursor entered. */
 const Button = ({
   children,
   onClick,
   className = "",
   type = "button",
+  tone = "ink",
 }: Props) => {
   const btn = useRef<HTMLButtonElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
-  const label = useRef<HTMLSpanElement>(null);
 
   useGSAP(
     (_ctx, contextSafe) => {
       const el = btn.current;
-      if (!el || !fill.current || !label.current || !contextSafe) return;
+      const f = fill.current;
+      if (!el || !f || !contextSafe) return;
 
-      const lime = getComputedStyle(label.current).color;
+      const mm = gsap.matchMedia();
+      mm.add("(hover: hover) and (pointer: fine)", () => {
+        gsap.set(f, { yPercent: 101 });
 
-      gsap.set(fill.current, { clipPath: "circle(0% at 0% 100%)" });
-
-      const corner = (e: MouseEvent) => {
-        const r = el.getBoundingClientRect();
-        return {
-          x: e.clientX < r.left + r.width / 2 ? 0 : 100,
-          y: e.clientY < r.top + r.height / 2 ? 0 : 100,
+        const side = (e: MouseEvent) => {
+          const r = el.getBoundingClientRect();
+          return e.clientY < r.top + r.height / 2 ? -101 : 101;
         };
-      };
 
-      const onEnter = contextSafe((e: MouseEvent) => {
-        const { x, y } = corner(e);
-        gsap.set(fill.current, { clipPath: `circle(0% at ${x}% ${y}%)` });
-        gsap.to(fill.current, {
-          clipPath: `circle(150% at ${x}% ${y}%)`,
-          duration: 0.6,
-          ease: "power3.out",
-          overwrite: true,
+        const onEnter = contextSafe((e: MouseEvent) => {
+          gsap.set(f, { yPercent: side(e) });
+          gsap.to(f, {
+            yPercent: 0,
+            duration: 0.5,
+            ease: "power3.out",
+            overwrite: true,
+          });
         });
-        gsap.to(label.current, {
-          color: "#333333",
-          duration: 0.3,
-          ease: "power2.out",
-          overwrite: true,
+        const onLeave = contextSafe((e: MouseEvent) => {
+          gsap.to(f, {
+            yPercent: side(e),
+            duration: 0.4,
+            ease: "power3.inOut",
+            overwrite: true,
+          });
         });
+
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+        return () => {
+          el.removeEventListener("mouseenter", onEnter);
+          el.removeEventListener("mouseleave", onLeave);
+        };
       });
 
-      const onLeave = contextSafe((e: MouseEvent) => {
-        const { x, y } = corner(e);
-        gsap.to(fill.current, {
-          clipPath: `circle(0% at ${x}% ${y}%)`,
-          duration: 0.45,
-          ease: "power3.inOut",
-          overwrite: true,
-        });
-        gsap.to(label.current, {
-          color: lime,
-          duration: 0.3,
-          ease: "power2.inOut",
-          overwrite: true,
-        });
-      });
-
-      el.addEventListener("mouseenter", onEnter);
-      el.addEventListener("mouseleave", onLeave);
-
-      return () => {
-        el.removeEventListener("mouseenter", onEnter);
-        el.removeEventListener("mouseleave", onLeave);
-      };
+      return () => mm.revert();
     },
     { scope: btn },
   );
+
+  const colors =
+    tone === "ink"
+      ? "border-ink text-ink hover:text-paper"
+      : "border-paper text-paper hover:text-ink";
+  const fillColor = tone === "ink" ? "bg-ink" : "bg-paper";
 
   return (
     <button
       ref={btn}
       type={type}
       onClick={onClick}
-      className={`relative cursor-pointer overflow-hidden border border-[var(--color-lime)] px-8 py-4 font-mono text-sm tracking-widest uppercase ${className}`}
+      data-cursor="hover"
+      className={`eyebrow relative inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full border px-7 py-4 transition-colors duration-300 ${colors} ${className}`}
     >
       <span
         ref={fill}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[var(--color-lime)]"
+        className={`pointer-events-none absolute inset-0 rounded-full ${fillColor}`}
       />
-
-      <span ref={label} className="relative z-10 text-[var(--color-lime)]">
-        {children}
-      </span>
+      <span className="relative z-10">{children}</span>
     </button>
   );
 };
