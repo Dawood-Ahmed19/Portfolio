@@ -44,11 +44,11 @@ const HeroSection = ({ start = true }: Props) => {
         if (rule) gsap.set(rule, { scaleX: 0, transformOrigin: "left center" });
         if (!start) return;
 
-        gsap
+        const tl = gsap
           .timeline({ delay: 0.1, defaults: { ease: "power4.out" } })
-          .to(lines, { yPercent: 0, duration: 1.3, stagger: 0.12 })
-          .to(rule, { scaleX: 1, duration: 1.4, ease: "expo.out" }, 0.3)
-          .to(fades, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.55);
+          .to(lines, { yPercent: 0, duration: 1.3, stagger: 0.12 });
+        if (rule) tl.to(rule, { scaleX: 1, duration: 1.4, ease: "expo.out" }, 0.3);
+        tl.to(fades, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.55);
       });
 
       return () => mm.revert();
