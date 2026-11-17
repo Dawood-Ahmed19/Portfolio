@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Instrument_Serif,
+  JetBrains_Mono,
+} from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
+import WhatsAppButton from "@/components/Whatsappbutton";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -49,6 +54,7 @@ export default function RootLayout({
         <SmoothScroll>
           <Navbar />
           {children}
+          <WhatsAppButton />
         </SmoothScroll>
       </body>
     </html>
