@@ -25,7 +25,12 @@ const Cursor = () => {
           const text = label.current;
           if (!el || !text) return;
 
-          gsap.set(el, { xPercent: -50, yPercent: -50, scale: 0, autoAlpha: 0 });
+          gsap.set(el, {
+            xPercent: -50,
+            yPercent: -50,
+            scale: 0,
+            autoAlpha: 0,
+          });
           const qx = gsap.quickTo(el, "x", { duration: 0.45, ease: "power3" });
           const qy = gsap.quickTo(el, "y", { duration: 0.45, ease: "power3" });
 
@@ -37,7 +42,12 @@ const Cursor = () => {
             if (!visible) {
               visible = true;
               gsap.set(el, { x: e.clientX, y: e.clientY });
-              gsap.to(el, { autoAlpha: 1, scale: 1, duration: 0.4, ease: "back.out(2)" });
+              gsap.to(el, {
+                autoAlpha: 1,
+                scale: 1,
+                duration: 0.4,
+                ease: "back.out(2)",
+              });
             }
           };
 
@@ -50,6 +60,7 @@ const Cursor = () => {
               text.textContent = lbl;
               gsap.to(el, {
                 scale: lbl ? 4.2 : 2.6,
+                autoAlpha: lbl ? 1 : 0.5,
                 duration: 0.35,
                 ease: "power3.out",
                 overwrite: "auto",
@@ -58,6 +69,7 @@ const Cursor = () => {
               text.textContent = "";
               gsap.to(el, {
                 scale: 1,
+                ...(visible ? { autoAlpha: 1 } : {}),
                 duration: 0.35,
                 ease: "power3.out",
                 overwrite: "auto",
