@@ -15,10 +15,9 @@ type Project = {
   image?: string;
 };
 
-// Real projects from the original portfolio, unchanged.
 const PROJECTS: Project[] = [
   { title: "Business Dashboard", stack: "Next.js · Node · MongoDB", href: "#" },
-  { title: "Streaming App", stack: "React · PostgreSQL · NEONDB", href: "#" },
+  { title: "Streaming App", stack: "React · PostgreSQL · NEONDB · ExpressJS", href: "#" },
 ];
 
 const ProjectsSection = () => {
